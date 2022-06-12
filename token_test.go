@@ -31,10 +31,10 @@ func TestToken_UnmarshalClaims(t *testing.T) {
 func TestToken_Write(t *testing.T) {
 	token := Token{
 		Header: Header{
-			Algorithm: None,
+			Algorithm: alg.None,
 			Type:      JsonWebTokenType,
 		},
-		signer: alg.None{},
+		signer: alg.NoneAlgorithm{},
 	}
 
 	buffer, err := token.Write(testClaims{
@@ -52,10 +52,10 @@ func TestToken_Write(t *testing.T) {
 func TestToken_Validate(t *testing.T) {
 	token := Token{
 		Header: Header{
-			Algorithm: None,
+			Algorithm: alg.None,
 			Type:      JsonWebTokenType,
 		},
-		signer: alg.None{},
+		signer: alg.NoneAlgorithm{},
 		Claims: Claims{
 			ExpiresAt: NewPosixTime(time.Now().Add(-5 * time.Second)),
 		},

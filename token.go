@@ -3,6 +3,7 @@ package jwt
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Viva-Victoria/bear-jwt/alg"
 	"time"
 )
 
@@ -13,7 +14,7 @@ var (
 type Token struct {
 	Header    Header
 	Claims    Claims
-	signer    Signer
+	signer    alg.Signer
 	signature []byte
 	rawClaims []byte
 }

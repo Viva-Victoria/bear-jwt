@@ -15,13 +15,13 @@ type nameClaims struct {
 
 func TestParser_Parse(t *testing.T) {
 	parser := NewParser()
-	parser.Register(None, alg.None{}, alg.None{})
+	parser.Register(alg.None, alg.NoneAlgorithm{}, alg.NoneAlgorithm{})
 
 	t.Run("alg", func(t *testing.T) {
 		token, err := parser.Parse([]byte(`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ`))
 		require.NoError(t, err)
 		assert.Equal(t, JsonWebTokenType, token.Header.Type)
-		assert.Equal(t, None, token.Header.Algorithm)
+		assert.Equal(t, alg.None, token.Header.Algorithm)
 
 		claims := nameClaims{}
 		require.NoError(t, token.UnmarshalClaims(&claims))

@@ -3,66 +3,39 @@ package alg
 import (
 	"crypto"
 	"crypto/hmac"
+	"fmt"
 	"hash"
-	"sync"
 )
 
-// hmacSha private tool for HMAC SHA algorithms
-type hmacSha struct {
-	pool *sync.Pool
+// HmacSha HMAC SHA256
+type HmacSha struct {
+	pool HashPool
 	hash crypto.Hash
 }
 
-// newHmacSha creates new hmacSha with specified function pool
-func newHmacSha(key string, bit int) hmacSha {
+func NewHmacSha(a Algorithm, key string) (HmacSha, error) {
 	var hashFunc crypto.Hash
-	switch bit {
-	case 256:
+	switch a {
+	case HS256:
 		hashFunc = crypto.SHA256
-	case 384:
+	case HS384:
 		hashFunc = crypto.SHA384
-	case 512:
+	case HS512:
 		hashFunc = crypto.SHA512
+	default:
+		return HmacSha{}, fmt.Errorf("algorithm %s is not HMAC SHA", a)
 	}
 
-	return hmacSha{
+	return HmacSha{
 		hash: hashFunc,
-		pool: &sync.Pool{
-			New: func() interface{} {
-				return hmac.New(hashFunc.New, []byte(key))
-			},
-		},
-	}
+		pool: NewHashPool(func() hash.Hash {
+			return hmac.New(hashFunc.New, []byte(key))
+		}),
+	}, nil
 }
 
-// sign returns signature for specified payload or error
-func (h hmacSha) sign(payload []byte) ([]byte, error) {
-	hasher, _ := h.pool.Get().(hash.Hash)
-	defer func() {
-		hasher.Reset()
-		h.pool.Put(hasher)
-	}()
-
-	if _, err := hasher.Write(payload); err != nil {
-		return nil, err
-	}
-
-	return hasher.Sum(nil), nil
-}
-
-// HS256 HMAC SHA256
-type HS256 struct {
-	hs hmacSha
-}
-
-func NewHS256(key string) HS256 {
-	return HS256{
-		hs: newHmacSha(key, 256),
-	}
-}
-
-func (h HS256) Verify(payload, signature []byte) (bool, error) {
-	expected, err := h.hs.sign(payload)
+func (h HmacSha) Verify(payload, signature []byte) (bool, error) {
+	expected, err := h.Sign(payload)
 	if err != nil {
 		return false, err
 	}
@@ -70,66 +43,10 @@ func (h HS256) Verify(payload, signature []byte) (bool, error) {
 	return hmac.Equal(expected, signature), nil
 }
 
-func (h HS256) Size() int {
-	return h.hs.hash.Size()
+func (h HmacSha) Size() int {
+	return h.hash.Size()
 }
 
-func (h HS256) Sign(payload []byte) ([]byte, error) {
-	return h.hs.sign(payload)
-}
-
-// HS384 HMAC SHA384
-type HS384 struct {
-	hs hmacSha
-}
-
-func NewHS384(key string) HS384 {
-	return HS384{
-		hs: newHmacSha(key, 384),
-	}
-}
-
-func (h HS384) Verify(payload, signature []byte) (bool, error) {
-	expected, err := h.hs.sign(payload)
-	if err != nil {
-		return false, err
-	}
-
-	return hmac.Equal(expected, signature), nil
-}
-
-func (h HS384) Size() int {
-	return h.hs.hash.Size()
-}
-
-func (h HS384) Sign(payload []byte) ([]byte, error) {
-	return h.hs.sign(payload)
-}
-
-// HS512 HMAC SHA512
-type HS512 struct {
-	hs hmacSha
-}
-
-func NewHS512(key string) HS512 {
-	return HS512{
-		hs: newHmacSha(key, 512),
-	}
-}
-
-func (h HS512) Verify(payload, signature []byte) (bool, error) {
-	expected, err := h.hs.sign(payload)
-	if err != nil {
-		return false, err
-	}
-
-	return hmac.Equal(expected, signature), nil
-}
-
-func (h HS512) Size() int {
-	return h.hs.hash.Size()
-}
-
-func (h HS512) Sign(payload []byte) ([]byte, error) {
-	return h.hs.sign(payload)
+func (h HmacSha) Sign(payload []byte) ([]byte, error) {
+	return h.pool.Digest(payload)
 }

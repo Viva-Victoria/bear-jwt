@@ -1,10 +1,12 @@
 package jwt
 
+import "github.com/Viva-Victoria/bear-jwt/alg"
+
 type Header struct {
-	Algorithm   Algorithm `json:"alg"`
-	Type        Type      `json:"typ"`
-	ContentType string    `json:"cty,omitempty"`
-	KeyId       string    `json:"kid,omitempty"`
+	Algorithm   alg.Algorithm `json:"alg"`
+	Type        Type          `json:"typ"`
+	ContentType string        `json:"cty,omitempty"`
+	KeyId       string        `json:"kid,omitempty"`
 }
 
 type Claims struct {

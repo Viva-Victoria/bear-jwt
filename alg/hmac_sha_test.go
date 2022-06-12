@@ -12,41 +12,43 @@ func toBase64(d []byte) string {
 	return base64.RawURLEncoding.EncodeToString(d)
 }
 
-func TestHS256_Sign(t *testing.T) {
-	payload := []byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`)
-
-	hs256 := NewHS256("my-secret")
-	signature, err := hs256.Sign(payload)
-	require.NoError(t, err)
-	require.Equal(t, `LE-wEGZ8PpTX5RKASzsuKZBm40Wrbj5J3ezy-0FD2fY`, toBase64(signature))
-
-	ok, err := hs256.Verify(payload, signature)
-	require.NoError(t, err)
-	assert.True(t, ok)
+func fromBase64(s string) ([]byte, error) {
+	return base64.RawURLEncoding.DecodeString(s)
 }
 
-func TestHS384_Sign(t *testing.T) {
-	payload := []byte(`eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`)
+func testHmacSha(a Algorithm, key, payload, signature string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Helper()
 
-	hs384 := NewHS384("my-secret")
-	signature, err := hs384.Sign(payload)
-	require.NoError(t, err)
-	require.Equal(t, `CV0AaZkyg82SEdZfeNQHmX-L8SHR9cxz_xz9lidBwrnjTKpB9glEo14WDpCCWNV5`, toBase64(signature))
+		payloadBytes := []byte(payload)
 
-	ok, err := hs384.Verify(payload, signature)
-	require.NoError(t, err)
-	assert.True(t, ok)
+		hs256, err := NewHmacSha(a, key)
+		require.NoError(t, err)
+
+		signatureBytes, err := hs256.Sign(payloadBytes)
+		require.NoError(t, err)
+		require.Equal(t, signature, toBase64(signatureBytes))
+
+		ok, err := hs256.Verify(payloadBytes, signatureBytes)
+		require.NoError(t, err)
+		assert.True(t, ok)
+	}
 }
 
-func TestHS512_Sign(t *testing.T) {
-	payload := []byte(`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`)
+func TestHS(t *testing.T) {
+	t.Run("256", testHmacSha(HS256, "my-secret",
+		`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`,
+		`LE-wEGZ8PpTX5RKASzsuKZBm40Wrbj5J3ezy-0FD2fY`))
+	t.Run("384", testHmacSha(HS384, "my-secret",
+		`eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`,
+		`CV0AaZkyg82SEdZfeNQHmX-L8SHR9cxz_xz9lidBwrnjTKpB9glEo14WDpCCWNV5`))
+	t.Run("512", testHmacSha(HS512, "my-secret",
+		`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`,
+		`nbvfOhmdw0mJ44iboMfL0ND18n5tKYb2mZdlIFT6fYX8gu0mPm9qPXv2DyTcVcBDp2HC7PRZSfw-eZW6g6JrxQ`))
 
-	hs512 := NewHS512("my-secret")
-	signature, err := hs512.Sign(payload)
-	require.NoError(t, err)
-	require.Equal(t, `nbvfOhmdw0mJ44iboMfL0ND18n5tKYb2mZdlIFT6fYX8gu0mPm9qPXv2DyTcVcBDp2HC7PRZSfw-eZW6g6JrxQ`, toBase64(signature))
+}
 
-	ok, err := hs512.Verify(payload, signature)
-	require.NoError(t, err)
-	assert.True(t, ok)
+func TestHmacSha_InvalidAlg(t *testing.T) {
+	_, err := NewHmacSha(RS256, "test")
+	require.Error(t, err)
 }

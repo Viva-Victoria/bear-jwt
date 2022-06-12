@@ -4,24 +4,25 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/Viva-Victoria/bear-jwt/alg"
 )
 
 // Parser parses byte array to Token
 type Parser struct {
-	verifiers map[Algorithm]Verifier
-	signers   map[Algorithm]Signer
+	verifiers map[alg.Algorithm]alg.Verifier
+	signers   map[alg.Algorithm]alg.Signer
 }
 
 func NewParser() Parser {
 	return Parser{
-		verifiers: make(map[Algorithm]Verifier),
-		signers:   make(map[Algorithm]Signer),
+		verifiers: make(map[alg.Algorithm]alg.Verifier),
+		signers:   make(map[alg.Algorithm]alg.Signer),
 	}
 }
 
 // Register registers new verifier and signer for specified algorithm.
 // If another implementation of the algorithm was registered earlier, it will be overwritten
-func (p Parser) Register(algorithm Algorithm, verifier Verifier, signer Signer) {
+func (p Parser) Register(algorithm alg.Algorithm, verifier alg.Verifier, signer alg.Signer) {
 	p.verifiers[algorithm] = verifier
 	p.signers[algorithm] = signer
 }
