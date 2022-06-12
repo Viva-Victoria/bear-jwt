@@ -1,4 +1,4 @@
-module bear-jwt
+module github.com/Viva-Victoria/bear-jwt
 
 go 1.15
 

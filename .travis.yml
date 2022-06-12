@@ -1,0 +1,19 @@
+sudo: false
+language: go
+go_import_path: github.com/Viva-Victoria/bear-jwt
+
+env:
+  global:
+    - HADDOCK_IS_CI=yes GO111MODULE=on
+
+go:
+  - stable
+
+before_install:
+  - go version
+
+script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
