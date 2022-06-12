@@ -4,7 +4,7 @@ go_import_path: github.com/Viva-Victoria/bear-jwt
 
 env:
   global:
-    - HADDOCK_IS_CI=yes GO111MODULE=on
+    - GO111MODULE=on
 
 go:
   - stable
