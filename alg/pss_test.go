@@ -24,9 +24,18 @@ func testRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Privat
 }
 
 func TestRsaSsaPss(t *testing.T) {
+	t.Run("size", func(t *testing.T) {
+		rs, err := NewRsaSsaPss(PS256, rsa256PublicKey, rsa256PrivateKey)
+		require.NoError(t, err)
+		assert.Equal(t, rsa256PrivateKey.Size(), rs.Size())
+	})
 	t.Run("256", testRsaSsaPss(PS256, rsa256PublicKey, rsa256PrivateKey, []byte("My name Joseph, im a software developer")))
 	t.Run("384", testRsaSsaPss(PS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPss(PS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))
+	t.Run("incorrect alg", func(t *testing.T) {
+		_, err := NewRsaSsaPss(RS256, rsa256PublicKey, rsa256PrivateKeyAlternative)
+		require.Error(t, err)
+	})
 	t.Run("nil keys", func(t *testing.T) {
 		_, err := NewRsaSsaPss(PS256, rsa256PublicKey, nil)
 		require.Error(t, err)

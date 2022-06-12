@@ -60,6 +60,11 @@ func testRsaSsaPkcs(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Priva
 }
 
 func TestRsaSsaPkcs(t *testing.T) {
+	t.Run("size", func(t *testing.T) {
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		require.NoError(t, err)
+		assert.Equal(t, rsa256PrivateKey.Size(), rs.Size())
+	})
 	t.Run("256", testRsaSsaPkcs(RS256, rsa256PublicKey, rsa256PrivateKey, []byte("My name Joseph, im a software developer")))
 	t.Run("384", testRsaSsaPkcs(RS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPkcs(RS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))

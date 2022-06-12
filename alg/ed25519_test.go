@@ -3,6 +3,7 @@ package alg
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -23,6 +24,12 @@ var (
 )
 
 func TestEdDSA(t *testing.T) {
+	t.Run("size", func(t *testing.T) {
+		ed, err := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
+		require.NoError(t, err)
+
+		assert.Equal(t, ed25519.SignatureSize, ed.Size())
+	})
 	t.Run("simple", func(t *testing.T) {
 		ed, err := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
 		require.NoError(t, err)

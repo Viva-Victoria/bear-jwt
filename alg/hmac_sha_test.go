@@ -1,6 +1,7 @@
 package alg
 
 import (
+	"crypto"
 	"encoding/base64"
 	"testing"
 
@@ -36,6 +37,12 @@ func testHmacSha(a Algorithm, key, payload, signature string) func(t *testing.T)
 }
 
 func TestHS(t *testing.T) {
+	t.Run("size", func(t *testing.T) {
+		hs256, err := NewHmacSha(HS256, "key")
+		require.NoError(t, err)
+
+		assert.Equal(t, crypto.SHA256.Size(), hs256.Size())
+	})
 	t.Run("256", testHmacSha(HS256, "my-secret",
 		`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`,
 		`LE-wEGZ8PpTX5RKASzsuKZBm40Wrbj5J3ezy-0FD2fY`))

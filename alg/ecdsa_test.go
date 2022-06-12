@@ -59,18 +59,19 @@ func testEcdsa(a Algorithm, private *ecdsa.PrivateKey, public *ecdsa.PublicKey) 
 }
 
 func TestECDSA(t *testing.T) {
+	t.Run("size", func(t *testing.T) {
+		e, err := NewECDSA(ES256, ecdsa256PrivateKey, ecdsa256PublicKey)
+		require.NoError(t, err)
+		assert.Equal(t, roundToBytes(ecdsa256PublicKey.Params().BitSize)*2, e.Size())
+	})
 	t.Run("ES256", testEcdsa(ES256, ecdsa256PrivateKey, ecdsa256PublicKey))
 	t.Run("ES384", testEcdsa(ES384, ecdsa384PrivateKey, ecdsa384PublicKey))
 	t.Run("ES512", testEcdsa(ES512, ecdsa521PrivateKey, ecdsa521PublicKey))
 	t.Run("ES256 with 384 key", func(t *testing.T) {
-		t.Helper()
-
 		_, err := NewECDSA(ES256, ecdsa384PrivateKey, ecdsa384PublicKey)
 		assert.Error(t, err)
 	})
 	t.Run("ES512 with nil keys", func(t *testing.T) {
-		t.Helper()
-
 		require.NotPanics(t, func() {
 			_, err := NewECDSA(ES512, ecdsa521PrivateKey, nil)
 			assert.Error(t, err)
