@@ -11,6 +11,7 @@ go:
 
 before_install:
   - go version
+  - go get -t -v ./alg
 
 script:
   - go test -race -coverprofile=coverage.txt -covermode=atomic
