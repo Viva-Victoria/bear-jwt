@@ -7,8 +7,12 @@ type Ed25519 struct {
 	private ed25519.PrivateKey
 }
 
-func NewEd25519(public ed25519.PublicKey, private ed25519.PrivateKey) Ed25519 {
-	return Ed25519{public: public, private: private}
+func NewEd25519(public ed25519.PublicKey, private ed25519.PrivateKey) (Ed25519, error) {
+	if len(public) == 0 || len(private) == 0 {
+		return Ed25519{}, ErrNilKey
+	}
+
+	return Ed25519{public: public, private: private}, nil
 }
 
 func (e Ed25519) Size() int {

@@ -33,6 +33,10 @@ type RsaSsaPss struct {
 }
 
 func NewRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPss, error) {
+	if publicKey == nil || privateKey == nil {
+		return RsaSsaPss{}, ErrNilKey
+	}
+
 	var hash crypto.Hash
 	var options *rsa.PSSOptions
 

@@ -14,6 +14,10 @@ type HmacSha struct {
 }
 
 func NewHmacSha(a Algorithm, key string) (HmacSha, error) {
+	if len(key) == 0 {
+		return HmacSha{}, ErrNilKey
+	}
+
 	var hashFunc crypto.Hash
 	switch a {
 	case HS256:

@@ -63,6 +63,28 @@ func TestRsaSsaPkcs(t *testing.T) {
 	t.Run("256", testRsaSsaPkcs(RS256, rsa256PublicKey, rsa256PrivateKey, []byte("My name Joseph, im a software developer")))
 	t.Run("384", testRsaSsaPkcs(RS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPkcs(RS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))
+	t.Run("nil keys", func(t *testing.T) {
+		_, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, nil)
+		require.Error(t, err)
+
+		_, err = NewRsaSsaPkcs1(RS256, nil, rsa256PrivateKey)
+		require.Error(t, err)
+	})
+	t.Run("incorrect keys", func(t *testing.T) {
+		primary, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		require.NoError(t, err)
+
+		secondary, err := NewRsaSsaPkcs1(RS256, rsa256PublicKeyAlternative, rsa256PrivateKeyAlternative)
+		require.NoError(t, err)
+
+		payload := []byte("im beach, im a boss")
+		signature, err := primary.Sign(payload)
+		require.NoError(t, err)
+
+		ok, err := secondary.Verify(payload, signature)
+		require.NoError(t, err)
+		assert.False(t, ok)
+	})
 }
 
 var (
@@ -85,6 +107,28 @@ MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDD8jqKGL07rDKSx5bHSh+UDePd
 DE+DEYpaHD00jqlKfnJEpCHNVX1ghK3lGL/HQxeWa8higFu/El/4Q9l03DSYJwmd
 DfTqrfuDHIGiiUjcVHBas3SsuDaR7I3UXt3OIIj5EC9moUAVuhORQfjhV6xikbFi
 /fPhvx/im238nATiZQIDAQAB
+-----END PUBLIC KEY-----`)
+
+	rsa256PrivateKeyAlternative, rsa256PublicKeyAlternative = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----
+MIICXAIBAAKBgQC9E3U96JbcAXssufZQRTwqqvYbfXWfO/riFCFvpnnS9+Vs4Hls
+QKO/ctSlgyYWqtyKBQxWsyYSjMJeals7zAItrBjZGitl+dAojEtYS3K3GOLoypYq
+ai0EAcS1H0oAsXK4Kp1l6SgFnVL2GONco0bDOEG4ZPSRQR/pm9zgyseRVwIDAQAB
+AoGANauPTSp3oC2/dBu5YmG0yXvL7lO3jqKs/X2vXA0Kaas6caRqcyMKGC8VU4Id
+zrNjdL4oGXgy53MTPU+9ZATt3OIFMHmeip/Edbq4wop66kSsTRuXQXeIYurH5HUQ
+EqJQWGuEodl3fYnfaE2odeFIoSDSb4zlvTAaEmRrIWT9fRkCQQDmC4Es47nyAnLc
+C2Jp0Op7oWptl7QCe4Ssdtg8mkhWBY+/rsGfgJAu1NEBlWyXHIVWTfh8zWTZIMSP
++0o28461AkEA0mig60VGMXUmQLValSscuVkxhadFR8h48holF1toyNCLiqozv0C7
+KyHfnBb3zHGL9SQrlXU2UQaOIlUTLwPbWwJATF0HTVpu8EolzKuuyIeEPvPvO1//
+bk+IVCPDViK03nFMLYoaVhM8SX91vfvXJzZdgK+zS+J2lqkM9uqo0SL6fQJBALmK
+N/SfdsFgG6ZOBZ2qkb7D7057bTVai4R6F6EcIy+J7rMNWWpaK3JigWuEOWlX62H1
+TlWSMZ6LmESgHrWDwicCQHk/ZT9KuedCOIPiX/SWFRpt8QzGG0M6Jy+wmplcsLIx
+jHMFXTB+sfUmS6CbTN4XYNgOMBFgfJAZY94Fix5r1B8=
+-----END PRIVATE KEY-----
+`, `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9E3U96JbcAXssufZQRTwqqvYb
+fXWfO/riFCFvpnnS9+Vs4HlsQKO/ctSlgyYWqtyKBQxWsyYSjMJeals7zAItrBjZ
+Gitl+dAojEtYS3K3GOLoypYqai0EAcS1H0oAsXK4Kp1l6SgFnVL2GONco0bDOEG4
+ZPSRQR/pm9zgyseRVwIDAQAB
 -----END PUBLIC KEY-----`)
 
 	rsa384PrivateKey, rsa384PublicKey = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----

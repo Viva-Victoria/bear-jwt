@@ -33,7 +33,7 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 }
 
 func Test_generateECDSAKey(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
 		private, _ := ecdsa.GenerateKey(curve, rand.Reader)
 		priv, pub := encodeEcdsa(private)
@@ -80,6 +80,25 @@ func TestECDSA(t *testing.T) {
 			assert.Error(t, err)
 		})
 	})
+	t.Run("incorrect signature", func(t *testing.T) {
+		primary, err := NewECDSA(ES256, ecdsa256PrivateKey, ecdsa256PublicKey)
+		require.NoError(t, err)
+
+		secondary, err := NewECDSA(ES256, ecdsa256PrivateKeyAlternative, ecdsa256PublicKeyAlternative)
+		require.NoError(t, err)
+
+		payload := []byte("we developing secure soft")
+		signature, err := primary.Sign(payload)
+		require.NoError(t, err)
+
+		ok, err := secondary.Verify(payload, signature)
+		require.NoError(t, err)
+		assert.False(t, ok)
+	})
+	t.Run("incorrect algorithm", func(t *testing.T) {
+		_, err := NewECDSA(RS384, nil, nil)
+		assert.Error(t, err)
+	})
 }
 
 var (
@@ -90,6 +109,15 @@ pALEVOAz0BoubR+CYF3cTElX9TXaXsVGGA==
 -----END PRIVATE KEY-----`, `-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6/ndwXPKvSdHatHzaqclIDawgcI4
 H5sWCCPr0t40AJdrRKWiuLOspALEVOAz0BoubR+CYF3cTElX9TXaXsVGGA==
+-----END PUBLIC KEY-----`)
+
+	ecdsa256PrivateKeyAlternative, ecdsa256PublicKeyAlternative = decodeEcdsa(`-----BEGIN PRIVATE KEY-----
+MHcCAQEEIN7+8T51WBsDCd4l1rTv4KOrjBTAOfSsSX2/d/o+M1o4oAoGCCqGSM49
+AwEHoUQDQgAE/EcQqWWnLIhQ4uTXAwMmH+JsdkCI89gftNUBdGWsDjB5IWreRGZ7
+GUdEJTI8CkvDna0HxyiWGa+crtP4y2vnyg==
+-----END PRIVATE KEY-----`, `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/EcQqWWnLIhQ4uTXAwMmH+JsdkCI
+89gftNUBdGWsDjB5IWreRGZ7GUdEJTI8CkvDna0HxyiWGa+crtP4y2vnyg==
 -----END PUBLIC KEY-----`)
 
 	ecdsa384PrivateKey, ecdsa384PublicKey = decodeEcdsa(`-----BEGIN PRIVATE KEY-----

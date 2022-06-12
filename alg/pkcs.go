@@ -15,6 +15,10 @@ type RsaSsaPkcs1 struct {
 }
 
 func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPkcs1, error) {
+	if publicKey == nil || privateKey == nil {
+		return RsaSsaPkcs1{}, ErrNilKey
+	}
+
 	var hash crypto.Hash
 	switch a {
 	case RS256:

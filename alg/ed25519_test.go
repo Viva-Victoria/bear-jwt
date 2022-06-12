@@ -23,19 +23,31 @@ var (
 )
 
 func TestEdDSA(t *testing.T) {
-	ed := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
+	t.Run("simple", func(t *testing.T) {
+		ed, err := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
+		require.NoError(t, err)
 
-	payload := []byte("Hello, Mr Daemon!")
-	signature, err := ed.Sign(payload)
-	require.NoError(t, err)
-	require.Equal(t, "VP1EzZy_GYYqASbnys1u4j5W4Fh70cFDMQOPc2Q1kPPbkIGhRZBNGI40HWejvS9V1UEyl_OTj_-FNSalnLC1Bw", toBase64(signature))
+		payload := []byte("Hello, Mr Daemon!")
+		signature, err := ed.Sign(payload)
+		require.NoError(t, err)
+		require.Equal(t, "VP1EzZy_GYYqASbnys1u4j5W4Fh70cFDMQOPc2Q1kPPbkIGhRZBNGI40HWejvS9V1UEyl_OTj_-FNSalnLC1Bw", toBase64(signature))
 
-	ok, err := ed.Verify(payload, signature)
-	require.NoError(t, err)
-	require.True(t, ok)
+		ok, err := ed.Verify(payload, signature)
+		require.NoError(t, err)
+		require.True(t, ok)
 
-	ed = NewEd25519(ed25519PublicAlternative, ed25519PrivateAlternative)
-	ok, err = ed.Verify(payload, signature)
-	require.NoError(t, err)
-	require.False(t, ok)
+		ed, err = NewEd25519(ed25519PublicAlternative, ed25519PrivateAlternative)
+		require.NoError(t, err)
+
+		ok, err = ed.Verify(payload, signature)
+		require.NoError(t, err)
+		require.False(t, ok)
+	})
+	t.Run("nil keys", func(t *testing.T) {
+		_, err := NewEd25519(nil, ed25519PrivateKey)
+		require.Error(t, err)
+
+		_, err = NewEd25519(ed25519PublicKey, nil)
+		require.Error(t, err)
+	})
 }

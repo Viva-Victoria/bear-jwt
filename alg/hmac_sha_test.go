@@ -45,7 +45,25 @@ func TestHS(t *testing.T) {
 	t.Run("512", testHmacSha(HS512, "my-secret",
 		`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMjJhZWU4OC00MzA1LTQ5N2ItODMwNS00MDRjMGM2YmFjNTciLCJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMH0`,
 		`nbvfOhmdw0mJ44iboMfL0ND18n5tKYb2mZdlIFT6fYX8gu0mPm9qPXv2DyTcVcBDp2HC7PRZSfw-eZW6g6JrxQ`))
+	t.Run("empty key", func(t *testing.T) {
+		_, err := NewHmacSha(HS256, "")
+		require.Error(t, err)
+	})
+	t.Run("incorrect key", func(t *testing.T) {
+		primary, err := NewHmacSha(HS256, "primary")
+		require.NoError(t, err)
 
+		secondary, err := NewHmacSha(HS256, "secondary")
+		require.NoError(t, err)
+
+		payload := []byte("message")
+		signature, err := primary.Sign(payload)
+		require.NoError(t, err)
+
+		ok, err := secondary.Verify(payload, signature)
+		require.NoError(t, err)
+		require.False(t, ok)
+	})
 }
 
 func TestHmacSha_InvalidAlg(t *testing.T) {
