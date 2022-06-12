@@ -4,7 +4,7 @@ type Algorithm string
 
 const (
 	// None no digital signature or MAC performed
-	None Algorithm = "alg"
+	None Algorithm = "none"
 
 	// HS256 HMAC SHA-256
 	HS256 Algorithm = "HS256"

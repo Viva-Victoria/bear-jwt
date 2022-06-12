@@ -15,7 +15,6 @@ type nameClaims struct {
 func TestParser_Parse(t *testing.T) {
 	parser := NewParser()
 	parser.Register(None, alg.None{}, alg.None{})
-	parser.Register(EdDSA, alg.NewEd25519(nil, nil), alg.NewEd25519(nil, nil))
 
 	t.Run("alg", func(t *testing.T) {
 		token, err := parser.Parse([]byte(`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ`))
