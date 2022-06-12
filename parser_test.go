@@ -1,8 +1,9 @@
 package jwt
 
 import (
-	"bear-jwt/alg"
 	"testing"
+
+	"github.com/Viva-Victoria/bear-jwt/alg"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
