@@ -3,10 +3,11 @@ package alg
 import (
 	"crypto/ed25519"
 	"crypto/rand"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_generateEd25519Key(t *testing.T) {

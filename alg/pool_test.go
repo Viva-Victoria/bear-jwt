@@ -2,10 +2,11 @@ package alg
 
 import (
 	"crypto"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"hash"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func testHashPoolDigest(pool HashPool, data, expected string) func(t *testing.T) {

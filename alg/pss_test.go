@@ -2,9 +2,10 @@ package alg
 
 import (
 	"crypto/rsa"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func testRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, payload []byte) func(t *testing.T) {

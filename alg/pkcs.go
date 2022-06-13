@@ -7,16 +7,16 @@ import (
 	"fmt"
 )
 
-type RsaSsaPkcs1 struct {
+type RsaSsaPkcs struct {
 	publicKey  *rsa.PublicKey
 	privateKey *rsa.PrivateKey
-	hash       crypto.Hash
 	pool       HashPool
+	hash       crypto.Hash
 }
 
-func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPkcs1, error) {
+func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPkcs, error) {
 	if publicKey == nil || privateKey == nil {
-		return RsaSsaPkcs1{}, ErrNilKey
+		return RsaSsaPkcs{}, ErrNilKey
 	}
 
 	var hash crypto.Hash
@@ -28,10 +28,10 @@ func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Priva
 	case RS512:
 		hash = crypto.SHA512
 	default:
-		return RsaSsaPkcs1{}, fmt.Errorf("algorithm %s is not RSASSA-PKCS1", a)
+		return RsaSsaPkcs{}, fmt.Errorf("algorithm %s is not RSASSA-PKCS1", a)
 	}
 
-	return RsaSsaPkcs1{
+	return RsaSsaPkcs{
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		hash:       hash,
@@ -39,7 +39,7 @@ func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Priva
 	}, nil
 }
 
-func (r RsaSsaPkcs1) Verify(payload, signature []byte) (bool, error) {
+func (r RsaSsaPkcs) Verify(payload, signature []byte) (bool, error) {
 	digest, err := r.pool.Digest(payload)
 	if err != nil {
 		return false, err
@@ -57,11 +57,11 @@ func (r RsaSsaPkcs1) Verify(payload, signature []byte) (bool, error) {
 	return true, nil
 }
 
-func (r RsaSsaPkcs1) Size() int {
+func (r RsaSsaPkcs) Size() int {
 	return r.privateKey.Size()
 }
 
-func (r RsaSsaPkcs1) Sign(payload []byte) ([]byte, error) {
+func (r RsaSsaPkcs) Sign(payload []byte) ([]byte, error) {
 	digest, err := r.pool.Digest(payload)
 	if err != nil {
 		return nil, err

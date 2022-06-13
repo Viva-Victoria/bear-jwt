@@ -28,8 +28,8 @@ type RsaSsaPss struct {
 	publicKey  *rsa.PublicKey
 	privateKey *rsa.PrivateKey
 	options    *rsa.PSSOptions
-	hash       crypto.Hash
 	pool       HashPool
+	hash       crypto.Hash
 }
 
 func NewRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPss, error) {

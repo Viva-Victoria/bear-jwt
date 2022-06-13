@@ -3,8 +3,9 @@ package jwt
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Viva-Victoria/bear-jwt/alg"
 	"time"
+
+	"github.com/Viva-Victoria/bear-jwt/alg"
 )
 
 var (

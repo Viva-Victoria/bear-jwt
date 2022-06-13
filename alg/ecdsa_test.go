@@ -6,10 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func encodeEcdsa(privateKey *ecdsa.PrivateKey) (string, string) {
@@ -33,7 +34,7 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 }
 
 func Test_generateECDSAKey(t *testing.T) {
-	//t.Skip()
+	// t.Skip()
 	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
 		private, _ := ecdsa.GenerateKey(curve, rand.Reader)
 		priv, pub := encodeEcdsa(private)

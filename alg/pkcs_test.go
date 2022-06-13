@@ -5,23 +5,14 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func encodeRsaPkcs(privateKey *rsa.PrivateKey) (string, string) {
-	x509Encoded := x509.MarshalPKCS1PrivateKey(privateKey)
-	pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
-
-	x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
-	pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
-
-	return string(pemEncoded), string(pemEncodedPub)
-}
-
-func decodeRsaPkcs(private, public string) (*rsa.PrivateKey, *rsa.PublicKey) {
+func decodeRsa(private, public string) (*rsa.PrivateKey, *rsa.PublicKey) {
 	blockPrivate, _ := pem.Decode([]byte(private))
 	privateKey, _ := x509.ParsePKCS1PrivateKey(blockPrivate.Bytes)
 
@@ -38,8 +29,13 @@ func Test_generateRsaKeys(t *testing.T) {
 		privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 		require.NoError(t, err)
 
-		public, private := encodeRsaPkcs(privateKey)
-		log.Printf("%d:\n%s\n%s\n", bits, public, private)
+		x509Encoded := x509.MarshalPKCS1PrivateKey(privateKey)
+		pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
+
+		x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
+		pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
+
+		log.Printf("%d:\n%s\n%s\n", bits, string(pemEncoded), string(pemEncodedPub))
 	}
 }
 
@@ -93,7 +89,7 @@ func TestRsaSsaPkcs(t *testing.T) {
 }
 
 var (
-	rsa256PrivateKey, rsa256PublicKey = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----
+	rsa256PrivateKey, rsa256PublicKey = decodeRsa(`-----BEGIN PRIVATE KEY-----
 MIICXAIBAAKBgQDD8jqKGL07rDKSx5bHSh+UDePdDE+DEYpaHD00jqlKfnJEpCHN
 VX1ghK3lGL/HQxeWa8higFu/El/4Q9l03DSYJwmdDfTqrfuDHIGiiUjcVHBas3Ss
 uDaR7I3UXt3OIIj5EC9moUAVuhORQfjhV6xikbFi/fPhvx/im238nATiZQIDAQAB
@@ -114,7 +110,7 @@ DfTqrfuDHIGiiUjcVHBas3SsuDaR7I3UXt3OIIj5EC9moUAVuhORQfjhV6xikbFi
 /fPhvx/im238nATiZQIDAQAB
 -----END PUBLIC KEY-----`)
 
-	rsa256PrivateKeyAlternative, rsa256PublicKeyAlternative = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----
+	rsa256PrivateKeyAlternative, rsa256PublicKeyAlternative = decodeRsa(`-----BEGIN PRIVATE KEY-----
 MIICXAIBAAKBgQC9E3U96JbcAXssufZQRTwqqvYbfXWfO/riFCFvpnnS9+Vs4Hls
 QKO/ctSlgyYWqtyKBQxWsyYSjMJeals7zAItrBjZGitl+dAojEtYS3K3GOLoypYq
 ai0EAcS1H0oAsXK4Kp1l6SgFnVL2GONco0bDOEG4ZPSRQR/pm9zgyseRVwIDAQAB
@@ -136,7 +132,7 @@ Gitl+dAojEtYS3K3GOLoypYqai0EAcS1H0oAsXK4Kp1l6SgFnVL2GONco0bDOEG4
 ZPSRQR/pm9zgyseRVwIDAQAB
 -----END PUBLIC KEY-----`)
 
-	rsa384PrivateKey, rsa384PublicKey = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----
+	rsa384PrivateKey, rsa384PublicKey = decodeRsa(`-----BEGIN PRIVATE KEY-----
 MIIEogIBAAKCAQEAueRCKkb3YDRbtcgZuh2s3IKB52EGymI27mX2oqi73KtKWQge
 C9r0zAn2HuKpTyh7XzGDzIVPCog9Vt9k3Jl49/vqzEX5ijyYcdWXfF762aGj35Lq
 7DvAODJM3nrnmNzh406M+dgrw3bftubNTirUdpIn7SkB4boMn8Ixk9sDDEStY+y+
@@ -172,7 +168,7 @@ Ea+7oA1d1h5m5CINISBz2l3yh8xRVBbfoDFzlkU4CRjkRJLliQ+hKLdgcu1007tF
 mQIDAQAB
 -----END PUBLIC KEY-----`)
 
-	rsa512PrivateKey, rsa512PublicKey = decodeRsaPkcs(`-----BEGIN PRIVATE KEY-----
+	rsa512PrivateKey, rsa512PublicKey = decodeRsa(`-----BEGIN PRIVATE KEY-----
 MIIJKQIBAAKCAgEAvKx0Pp/p49alGgs87f7p76d9cAm4xf5XgiLO+gWT4fscMure
 JPPiPXk+gpt74JHBcci1udDXf6aeU3Uj0tEWfg5Db/sGmEBdnQm+PedWBnOrOl2T
 YQngw9JGs0IN8187Hmx4ipy3qnozzYIWnGscSaAMrDAfJQHEu9w2G70nNX5HWusL
