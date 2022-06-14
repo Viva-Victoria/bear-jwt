@@ -22,11 +22,11 @@ func (e errorVerifier) Size() int {
 	return 0
 }
 
-func (e errorVerifier) Sign(payload []byte) ([]byte, error) {
+func (e errorVerifier) Sign(_ []byte) ([]byte, error) {
 	return nil, e.err
 }
 
-func (e errorVerifier) Verify(payload, signature []byte) (bool, error) {
+func (e errorVerifier) Verify(_, _ []byte) (bool, error) {
 	return false, e.err
 }
 
