@@ -43,7 +43,7 @@ func (p Parser) Parse(data []byte) (Token, error) {
 	if secondDot == -1 {
 		secondDot = len(data)
 	} else {
-		secondDot += firstDot
+		secondDot += firstDot + 1
 	}
 
 	payloadBytes := data[:secondDot]
@@ -59,7 +59,8 @@ func (p Parser) Parse(data []byte) (Token, error) {
 
 	var signatureBytes []byte
 	if len(payloadBytes) < len(data) {
-		signatureBytes, err = fromBase64(data[secondDot+1:])
+		d := data[secondDot+1:]
+		signatureBytes, err = fromBase64(d)
 		if err != nil {
 			return Token{}, fmt.Errorf("bad signature: %v", err)
 		}
