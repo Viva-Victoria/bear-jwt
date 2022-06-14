@@ -2,6 +2,7 @@ package alg
 
 import (
 	"crypto"
+	"errors"
 	"hash"
 	"testing"
 
@@ -9,7 +10,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testHashPoolDigest(pool HashPool, data, expected string) func(t *testing.T) {
+type errorHash struct{}
+
+func (e errorHash) Write(p []byte) (n int, err error) {
+	return 0, errors.New("fail")
+}
+
+func (e errorHash) Sum(b []byte) []byte {
+	return nil
+}
+
+func (e errorHash) Reset() {}
+
+func (e errorHash) Size() int {
+	return 0
+}
+
+func (e errorHash) BlockSize() int {
+	return 0
+}
+
+func testHashPoolDigest(data, expected string) func(t *testing.T) {
+	pool := NewHashPool(func() hash.Hash {
+		return crypto.SHA256.New()
+	})
+
 	return func(t *testing.T) {
 		t.Helper()
 
@@ -20,10 +45,15 @@ func testHashPoolDigest(pool HashPool, data, expected string) func(t *testing.T)
 }
 
 func TestHashPool_Digest(t *testing.T) {
-	pool := NewHashPool(func() hash.Hash {
-		return crypto.SHA256.New()
-	})
 
-	t.Run("simple", testHashPoolDigest(pool, "Hello world!", "wFNeS-K3n_2TKRMFQ2v4iTFOSj-uwF7P_Lt98xrZ5Ro"))
-	t.Run("nil", testHashPoolDigest(pool, "", "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU"))
+	t.Run("simple", testHashPoolDigest("Hello world!", "wFNeS-K3n_2TKRMFQ2v4iTFOSj-uwF7P_Lt98xrZ5Ro"))
+	t.Run("nil", testHashPoolDigest("", "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU"))
+	t.Run("error hash", func(t *testing.T) {
+		pool := NewHashPool(func() hash.Hash {
+			return &errorHash{}
+		})
+
+		_, err := pool.Digest([]byte("message"))
+		require.Error(t, err)
+	})
 }

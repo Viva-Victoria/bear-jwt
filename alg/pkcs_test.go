@@ -1,10 +1,12 @@
 package alg
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"hash"
 	"log"
 	"testing"
 
@@ -64,6 +66,10 @@ func TestRsaSsaPkcs(t *testing.T) {
 	t.Run("256", testRsaSsaPkcs(RS256, rsa256PublicKey, rsa256PrivateKey, []byte("My name Joseph, im a software developer")))
 	t.Run("384", testRsaSsaPkcs(RS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPkcs(RS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))
+	t.Run("invalid type", func(t *testing.T) {
+		_, err := NewRsaSsaPkcs1(HS256, rsa256PublicKey, rsa256PrivateKey)
+		require.Error(t, err)
+	})
 	t.Run("nil keys", func(t *testing.T) {
 		_, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, nil)
 		require.Error(t, err)
@@ -85,6 +91,29 @@ func TestRsaSsaPkcs(t *testing.T) {
 		ok, err := secondary.Verify(payload, signature)
 		require.NoError(t, err)
 		assert.False(t, ok)
+	})
+	t.Run("nil signature", func(t *testing.T) {
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		require.NoError(t, err)
+
+		rs.hash = crypto.MD5
+
+		_, err = rs.Verify(nil, nil)
+		require.Error(t, err)
+	})
+	t.Run("error hash", func(t *testing.T) {
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		require.NoError(t, err)
+
+		rs.pool = NewHashPool(func() hash.Hash {
+			return &errorHash{}
+		})
+
+		_, err = rs.Verify([]byte("message"), []byte("signature"))
+		require.Error(t, err)
+
+		_, err = rs.Sign([]byte("message"))
+		require.Error(t, err)
 	})
 }
 

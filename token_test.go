@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -29,24 +30,84 @@ func TestToken_UnmarshalClaims(t *testing.T) {
 }
 
 func TestToken_Write(t *testing.T) {
-	token := Token{
-		Header: Header{
-			Algorithm: alg.None,
-			Type:      JsonWebTokenType,
-		},
-		signer: alg.NoneAlgorithm{},
-	}
+	t.Run("default claims", func(t *testing.T) {
+		token := Token{
+			Header: Header{
+				Algorithm: alg.None,
+				Type:      JsonWebTokenType,
+			},
+			Claims: Claims{
+				Id: "e62e7e19-98f6-40eb-93ef-833a33b75a22",
+			},
+			signer: alg.NoneAlgorithm{},
+		}
 
-	buffer, err := token.Write(testClaims{
-		Claims: Claims{
-			Id:        "022aee88-4305-497b-8305-404c0c6bac57",
-			IssuedAt:  NewPosixTime(time.Date(2022, 06, 12, 5, 0, 0, 0, time.UTC)),
-			ExpiresAt: NewPosixTime(time.Date(2022, 07, 12, 5, 0, 0, 0, time.UTC)),
-		},
+		buffer, err := token.Write(nil)
+		require.NoError(t, err)
+		assert.Equal(t, `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJqdGkiOiJlNjJlN2UxOS05OGY2LTQwZWItOTNlZi04MzNhMzNiNzVhMjIifQ`,
+			strings.TrimSpace(buffer.String()))
 	})
-	require.NoError(t, err)
-	assert.Equal(t, `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0`,
-		strings.TrimSpace(buffer.String()))
+
+	t.Run("error on sign", func(t *testing.T) {
+		token := Token{
+			Header: Header{
+				Algorithm: alg.None,
+				Type:      JsonWebTokenType,
+			},
+			Claims: Claims{
+				Id: "e62e7e19-98f6-40eb-93ef-833a33b75a22",
+			},
+			signer: errorVerifier{err: errors.New("fail")},
+		}
+
+		_, err := token.Write(nil)
+		require.Error(t, err)
+	})
+
+	t.Run("valid hs256", func(t *testing.T) {
+		signer, err := alg.NewHmacSha(alg.HS256, "secret")
+		require.NoError(t, err)
+
+		token := Token{
+			Header: Header{
+				Algorithm: alg.HS256,
+				Type:      JsonWebTokenType,
+			},
+			signer: signer,
+		}
+
+		buffer, err := token.Write(testClaims{
+			Claims: Claims{
+				Id:        "022aee88-4305-497b-8305-404c0c6bac57",
+				IssuedAt:  NewPosixTime(time.Date(2022, 06, 12, 5, 0, 0, 0, time.UTC)),
+				ExpiresAt: NewPosixTime(time.Date(2022, 07, 12, 5, 0, 0, 0, time.UTC)),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0.iRteOM8kvvHu6ZP3CXRaIg5yHuS8HHQ7Tkq9xNGNcJE`,
+			strings.TrimSpace(buffer.String()))
+	})
+
+	t.Run("valid no sign", func(t *testing.T) {
+		token := Token{
+			Header: Header{
+				Algorithm: alg.None,
+				Type:      JsonWebTokenType,
+			},
+			signer: alg.NoneAlgorithm{},
+		}
+
+		buffer, err := token.Write(testClaims{
+			Claims: Claims{
+				Id:        "022aee88-4305-497b-8305-404c0c6bac57",
+				IssuedAt:  NewPosixTime(time.Date(2022, 06, 12, 5, 0, 0, 0, time.UTC)),
+				ExpiresAt: NewPosixTime(time.Date(2022, 07, 12, 5, 0, 0, 0, time.UTC)),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0`,
+			strings.TrimSpace(buffer.String()))
+	})
 }
 
 func TestToken_Validate(t *testing.T) {

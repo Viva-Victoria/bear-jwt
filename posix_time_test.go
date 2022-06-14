@@ -58,6 +58,17 @@ func TestPosixTime_MarshalJSON(t *testing.T) {
 		expected := fmt.Sprintf(`{}`)
 		assert.Equal(t, expected, string(actual))
 	})
+	t.Run("marshal zero", func(t *testing.T) {
+		_, err := json.Marshal(posixTimeWrapper{
+			Wisdom: &PosixTime{},
+		})
+		require.NoError(t, err)
+	})
+	t.Run("unmarshal invalid", func(t *testing.T) {
+		posixTime := &PosixTime{}
+		err := posixTime.UnmarshalJSON([]byte("19a"))
+		require.Error(t, err)
+	})
 }
 
 func TestPosixTime_UnmarshalJSON(t *testing.T) {
