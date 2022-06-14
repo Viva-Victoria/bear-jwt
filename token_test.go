@@ -84,8 +84,8 @@ func TestToken_Write(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0.iRteOM8kvvHu6ZP3CXRaIg5yHuS8HHQ7Tkq9xNGNcJE`,
-			strings.TrimSpace(buffer.String()))
+		assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0."+
+			"iRteOM8kvvHu6ZP3CXRaIg5yHuS8HHQ7Tkq9xNGNcJE", strings.TrimSpace(buffer.String()))
 	})
 
 	t.Run("valid no sign", func(t *testing.T) {
