@@ -45,7 +45,7 @@ func testRsaSsaPkcs(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Priva
 	return func(t *testing.T) {
 		t.Helper()
 
-		rs, err := NewRsaSsaPkcs1(a, publicKey, privateKey)
+		rs, err := NewRsaSsaPkcs1(a, privateKey, publicKey)
 		require.NoError(t, err)
 
 		signature, err := rs.Sign(payload)
@@ -59,7 +59,7 @@ func testRsaSsaPkcs(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Priva
 
 func TestRsaSsaPkcs(t *testing.T) {
 	t.Run("size", func(t *testing.T) {
-		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 		assert.Equal(t, rsa256PrivateKey.Size(), rs.Size())
 	})
@@ -67,21 +67,21 @@ func TestRsaSsaPkcs(t *testing.T) {
 	t.Run("384", testRsaSsaPkcs(RS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPkcs(RS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))
 	t.Run("invalid type", func(t *testing.T) {
-		_, err := NewRsaSsaPkcs1(HS256, rsa256PublicKey, rsa256PrivateKey)
+		_, err := NewRsaSsaPkcs1(HS256, rsa256PrivateKey, rsa256PublicKey)
 		require.Error(t, err)
 	})
 	t.Run("nil keys", func(t *testing.T) {
-		_, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, nil)
+		_, err := NewRsaSsaPkcs1(RS256, nil, rsa256PublicKey)
 		require.Error(t, err)
 
-		_, err = NewRsaSsaPkcs1(RS256, nil, rsa256PrivateKey)
+		_, err = NewRsaSsaPkcs1(RS256, rsa256PrivateKey, nil)
 		require.Error(t, err)
 	})
 	t.Run("incorrect keys", func(t *testing.T) {
-		primary, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		primary, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 
-		secondary, err := NewRsaSsaPkcs1(RS256, rsa256PublicKeyAlternative, rsa256PrivateKeyAlternative)
+		secondary, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKeyAlternative, rsa256PublicKeyAlternative)
 		require.NoError(t, err)
 
 		payload := []byte("im beach, im a boss")
@@ -93,7 +93,7 @@ func TestRsaSsaPkcs(t *testing.T) {
 		assert.False(t, ok)
 	})
 	t.Run("nil signature", func(t *testing.T) {
-		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 
 		rs.hash = crypto.MD5
@@ -102,7 +102,7 @@ func TestRsaSsaPkcs(t *testing.T) {
 		require.Error(t, err)
 	})
 	t.Run("error hash", func(t *testing.T) {
-		rs, err := NewRsaSsaPkcs1(RS256, rsa256PublicKey, rsa256PrivateKey)
+		rs, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 
 		rs.pool = NewHashPool(func() hash.Hash {

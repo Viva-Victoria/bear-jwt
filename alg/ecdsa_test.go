@@ -13,16 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func encodeEcdsa(privateKey *ecdsa.PrivateKey) (string, string) {
-	x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
-	pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
-
-	x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
-	pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
-
-	return string(pemEncoded), string(pemEncodedPub)
-}
-
 func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.PublicKey) {
 	blockPrivate, _ := pem.Decode([]byte(private))
 	privateKey, _ := x509.ParseECPrivateKey(blockPrivate.Bytes)
@@ -36,9 +26,15 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 func Test_generateECDSAKey(t *testing.T) {
 	t.Skip()
 	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
-		private, _ := ecdsa.GenerateKey(curve, rand.Reader)
-		priv, pub := encodeEcdsa(private)
-		log.Printf("%d:\n%s\n%s\n", curve.Params().BitSize, priv, pub)
+		privateKey, _ := ecdsa.GenerateKey(curve, rand.Reader)
+
+		x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
+		pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
+
+		x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
+		pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
+
+		log.Printf("%d:\n%s\n%s\n", curve.Params().BitSize, string(pemEncoded), string(pemEncodedPub))
 	}
 }
 

@@ -27,13 +27,13 @@ var (
 
 func TestEdDSA(t *testing.T) {
 	t.Run("size", func(t *testing.T) {
-		ed, err := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
+		ed, err := NewEd25519(ed25519PrivateKey, ed25519PublicKey)
 		require.NoError(t, err)
 
 		assert.Equal(t, ed25519.SignatureSize, ed.Size())
 	})
 	t.Run("simple", func(t *testing.T) {
-		ed, err := NewEd25519(ed25519PublicKey, ed25519PrivateKey)
+		ed, err := NewEd25519(ed25519PrivateKey, ed25519PublicKey)
 		require.NoError(t, err)
 
 		payload := []byte("Hello, Mr Daemon!")
@@ -45,7 +45,7 @@ func TestEdDSA(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, ok)
 
-		ed, err = NewEd25519(ed25519PublicAlternative, ed25519PrivateAlternative)
+		ed, err = NewEd25519(ed25519PrivateAlternative, ed25519PublicAlternative)
 		require.NoError(t, err)
 
 		ok, err = ed.Verify(payload, signature)
@@ -53,10 +53,10 @@ func TestEdDSA(t *testing.T) {
 		require.False(t, ok)
 	})
 	t.Run("nil keys", func(t *testing.T) {
-		_, err := NewEd25519(nil, ed25519PrivateKey)
+		_, err := NewEd25519(ed25519PrivateKey, nil)
 		require.Error(t, err)
 
-		_, err = NewEd25519(ed25519PublicKey, nil)
+		_, err = NewEd25519(nil, ed25519PublicKey)
 		require.Error(t, err)
 	})
 }

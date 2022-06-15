@@ -32,7 +32,7 @@ type RsaSsaPss struct {
 	hash       crypto.Hash
 }
 
-func NewRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPss, error) {
+func NewRsaSsaPss(a Algorithm, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) (RsaSsaPss, error) {
 	if publicKey == nil || privateKey == nil {
 		return RsaSsaPss{}, ErrNilKey
 	}

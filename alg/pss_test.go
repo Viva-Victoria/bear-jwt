@@ -12,7 +12,7 @@ func testRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Privat
 	return func(t *testing.T) {
 		t.Helper()
 
-		rs, err := NewRsaSsaPss(a, publicKey, privateKey)
+		rs, err := NewRsaSsaPss(a, privateKey, publicKey)
 		require.NoError(t, err)
 
 		signature, err := rs.Sign(payload)
@@ -26,7 +26,7 @@ func testRsaSsaPss(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.Privat
 
 func TestRsaSsaPss(t *testing.T) {
 	t.Run("size", func(t *testing.T) {
-		rs, err := NewRsaSsaPss(PS256, rsa256PublicKey, rsa256PrivateKey)
+		rs, err := NewRsaSsaPss(PS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 		assert.Equal(t, rsa256PrivateKey.Size(), rs.Size())
 	})
@@ -34,21 +34,21 @@ func TestRsaSsaPss(t *testing.T) {
 	t.Run("384", testRsaSsaPss(PS384, rsa384PublicKey, rsa384PrivateKey, []byte("BadComedian is not my lover")))
 	t.Run("512", testRsaSsaPss(PS512, rsa512PublicKey, rsa512PrivateKey, []byte("No fear, no pain")))
 	t.Run("incorrect alg", func(t *testing.T) {
-		_, err := NewRsaSsaPss(RS256, rsa256PublicKey, rsa256PrivateKeyAlternative)
+		_, err := NewRsaSsaPss(RS256, rsa256PrivateKeyAlternative, rsa256PublicKey)
 		require.Error(t, err)
 	})
 	t.Run("nil keys", func(t *testing.T) {
-		_, err := NewRsaSsaPss(PS256, rsa256PublicKey, nil)
+		_, err := NewRsaSsaPss(PS256, nil, rsa256PublicKey)
 		require.Error(t, err)
 
-		_, err = NewRsaSsaPss(PS256, nil, rsa256PrivateKey)
+		_, err = NewRsaSsaPss(PS256, rsa256PrivateKey, nil)
 		require.Error(t, err)
 	})
 	t.Run("incorrect keys", func(t *testing.T) {
-		primary, err := NewRsaSsaPss(PS256, rsa256PublicKey, rsa256PrivateKey)
+		primary, err := NewRsaSsaPss(PS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 
-		secondary, err := NewRsaSsaPss(PS256, rsa256PublicKeyAlternative, rsa256PrivateKeyAlternative)
+		secondary, err := NewRsaSsaPss(PS256, rsa256PrivateKeyAlternative, rsa256PublicKeyAlternative)
 		require.NoError(t, err)
 
 		payload := []byte("im beach, im a boss")
