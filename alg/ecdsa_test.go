@@ -34,7 +34,7 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 }
 
 func Test_generateECDSAKey(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
 		private, _ := ecdsa.GenerateKey(curve, rand.Reader)
 		priv, pub := encodeEcdsa(private)
@@ -96,9 +96,12 @@ func TestECDSA(t *testing.T) {
 		ok, err := secondary.Verify(payload, signature)
 		require.NoError(t, err)
 		assert.False(t, ok)
+
+		_, err = secondary.Verify(payload, nil)
+		require.Error(t, err)
 	})
 	t.Run("incorrect algorithm", func(t *testing.T) {
-		_, err := NewECDSA(RS384, nil, nil)
+		_, err := NewECDSA(RS384, ecdsa256PrivateKey, ecdsa256PublicKey)
 		assert.Error(t, err)
 	})
 }

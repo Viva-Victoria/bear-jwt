@@ -33,6 +33,12 @@ func TestToken_Write(t *testing.T) {
 	hs256, err := alg.NewHmacSha(alg.HS256, "secret")
 	require.NoError(t, err)
 
+	t.Run("bad algorithm", func(t *testing.T) {
+		token := NewToken(alg.EdDSA)
+		_, err := token.Write()
+		require.Error(t, err)
+	})
+
 	t.Run("default claims", func(t *testing.T) {
 		Register(alg.None, &alg.NoneAlgorithm{}, &alg.NoneAlgorithm{})
 
@@ -122,6 +128,10 @@ func TestToken_Write(t *testing.T) {
 		s, err := token.WriteString()
 		require.NoError(t, err)
 		assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTUzMzU1NjB9.01a1NN6zS2AK2Vb18uNGCCGIwwFAAH5tzXh8p5mcPgk", s)
+
+		token.Header.Algorithm = alg.RS256
+		_, err = token.WriteString()
+		require.Error(t, err)
 	})
 }
 

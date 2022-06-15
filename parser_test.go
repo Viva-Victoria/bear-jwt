@@ -101,4 +101,20 @@ func TestParser_Parse(t *testing.T) {
 		require.NoError(t, token.Claims.Get(&claims))
 		assert.Equal(t, "John Walker", claims.Name)
 	})
+
+	t.Run("bad data", func(t *testing.T) {
+		_, err := Parse(nil)
+		require.EqualError(t, ErrNoData, err.Error())
+
+		_, err = Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`))
+		require.EqualError(t, ErrIncorrectFormat, err.Error())
+
+		_, err = Parse([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0." +
+			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
+		require.Error(t, err)
+
+		_, err = Parse([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsMSJpYXQiOjE2NTUwMTAwMDAsImp0aSI6IjAyMmFlZTg4LTQzMDUtNDk3Yi04MzA1LTQwNGMwYzZiYWM1NyJ9." +
+			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
+		require.Error(t, err)
+	})
 }
