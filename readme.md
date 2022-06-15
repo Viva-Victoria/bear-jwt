@@ -26,50 +26,47 @@ implement any other algorithm.
 ### Example
 Create new token:
 ```golang
+func init() {
+	hs256, err := alg.NewHmacSha(alg.HS256, "your secret")
+	if err != nil {
+		panic(err)
+	}
+	jwt.Register(alg.HS256, hs256, hs256)
+}
+
 func newToken(userId string) (string, error) {
-    token := Token{
-        Header: Header{
-            Algorithm: None,
-            Type:      JsonWebTokenType,
-        },
-        signer: alg.NewSha256("server-secret"),
-    }
-    return token.Write(myClaims{
-	    Expires: time.Now().Add(time.Hour*24),
-		UserId: userId
-    })
+    token := jwt.NewToken(alg.HS256)
+    token.Claims.Id = uuid.NewString()
+    token.Claims.IssuedAt: jwt.PosixNow()
+	
+    return token.WriteString()
 }
 ```
 You can add key info to Header (RFC 7517):
 ```golang
-Header{
-    Algorithm: None,
-    Type:      JsonWebTokenType,
-    KeyId:     "1",
-},
+token := jwt.NewToken(alg.HS256)
+token.Header.KeyId = 1
 ```
 
 Parsing token:
 ```golang
 func parseUserId(httpHeader string) (string, error) {
-    parser := NewParser()
-	
     hs256 := alg.NewSha256("server-secret")
-    parser.Register(HS256, hs256, hs256)
+    Register(HS256, hs256, hs256)
     
-    token, err := parser.Parse(strings.Replace(httpHeader, "Bearer ", ""))
+    token, err := Parse(strings.Replace(httpHeader, "Bearer ", ""))
     if err != nil {
         return "", err
     }
 	
-	// check issued_at, expires and not_before
-	err = token.Validate()
-	if err != nil {
-		return "", err
+    // check issued_at, expires and not_before
+    state := token.Validate()
+    if state != jwt.StateValid {
+        return "", fmt.Errorf("bad token: %d", state)
     }
 	
     var info myClaims
-    if err = token.UnmarshalClaims(&info); err != nil {
+    if err = token.Claims.Get(&info); err != nil {
         return "", err
     }
 	

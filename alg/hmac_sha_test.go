@@ -3,6 +3,7 @@ package alg
 import (
 	"crypto"
 	"encoding/base64"
+	"hash"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,6 +71,19 @@ func TestHS(t *testing.T) {
 		ok, err := secondary.Verify(payload, signature)
 		require.NoError(t, err)
 		require.False(t, ok)
+	})
+	t.Run("error digest", func(t *testing.T) {
+		hs, err := NewHmacSha(HS256, "test")
+		require.NoError(t, err)
+		hs.pool = NewHashPool(func() hash.Hash {
+			return &errorHash{}
+		})
+
+		_, err = hs.Sign([]byte("data"))
+		require.Error(t, err)
+
+		_, err = hs.Verify([]byte("data"), []byte("signature"))
+		require.Error(t, err)
 	})
 }
 

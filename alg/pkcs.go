@@ -14,7 +14,7 @@ type RsaSsaPkcs struct {
 	hash       crypto.Hash
 }
 
-func NewRsaSsaPkcs1(a Algorithm, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (RsaSsaPkcs, error) {
+func NewRsaSsaPkcs1(a Algorithm, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) (RsaSsaPkcs, error) {
 	if publicKey == nil || privateKey == nil {
 		return RsaSsaPkcs{}, ErrNilKey
 	}
