@@ -12,6 +12,7 @@ import (
 
 func Test_generateEd25519Key(t *testing.T) {
 	t.Skip()
+
 	public, private, _ := ed25519.GenerateKey(rand.Reader)
 	log.Println(toBase64(public), toBase64(private))
 }

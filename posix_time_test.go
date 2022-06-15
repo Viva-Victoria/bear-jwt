@@ -22,6 +22,12 @@ var (
 	unix12062022 = int64(1654992000)
 )
 
+func Test_PosixNow(t *testing.T) {
+	now := time.Now()
+	pNow := PosixNow()
+	assert.Equal(t, now.Unix(), pNow.Unix())
+}
+
 func TestPosixTime_MarshalJSON(t *testing.T) {
 	t.Run("marshal now", func(t *testing.T) {
 		now := time.Now()
