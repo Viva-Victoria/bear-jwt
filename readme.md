@@ -1,5 +1,5 @@
 # BEAR JWT 
-[![Build Status](https://app.travis-ci.com/Viva-Victoria/bear-jwt.svg?branch=dev)](https://app.travis-ci.com/Viva-Victoria/bear-jwt) [![codecov](https://codecov.io/gh/Viva-Victoria/bear-jwt/branch/dev/graph/badge.svg?token=6HV6WADQGC)](https://codecov.io/gh/Viva-Victoria/bear-jwt)
+[![Build Status](https://app.travis-ci.com/Viva-Victoria/bear-jwt.svg?branch=master)](https://app.travis-ci.com/Viva-Victoria/bear-jwt) [![codecov](https://codecov.io/gh/Viva-Victoria/bear-jwt/branch/master/graph/badge.svg?token=IelspWAvBc)](https://codecov.io/gh/Viva-Victoria/bear-jwt)
 ### bear-jwt is a part of big web api framework BEAR
 Simple tool for parsing and creating json web tokens. 
 
@@ -14,10 +14,10 @@ Open api with simple interfaces `Signer` and `Verifier` allows you to extend thi
 implement any other algorithm.
 
 ### Features
-- 100% **pure golang** library
+- 100% **golang** library
 - **EdDSA** implementation
 - full **RFC 7515, 7517, 7518** compliance
-- ~70% test coverage
+- ~90% test coverage
 - lightweight and simple
 
 ### Install
