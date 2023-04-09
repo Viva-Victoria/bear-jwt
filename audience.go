@@ -34,19 +34,14 @@ func (a *Audience) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &value); err != nil {
 		return err
 	}
-
 	if value == nil {
-		*a = make([]string, 0)
 		return nil
 	}
 
 	valueType := reflect.TypeOf(value)
 	switch valueType.Kind() {
 	case reflect.Array, reflect.Slice:
-		array, ok := value.([]interface{})
-		if !ok {
-			return ErrAudienceTypeMismatch
-		}
+		array, _ := value.([]interface{})
 
 		aud := make(Audience, len(array))
 		for i, item := range array {

@@ -13,7 +13,7 @@ const (
 	// HS512 HMAC SHA-512
 	HS512 Algorithm = "HS512"
 	// RS256 RSASSA-PKCS1-v1_5 using SHA-256
-	RS256 Algorithm = "RC256"
+	RS256 Algorithm = "RS256"
 	// RS384 RSASSA-PKCS1-v1_5 using SHA-384
 	RS384 Algorithm = "RS384"
 	// RS512 RSASSA-PKCS1-v1_5 using SHA-512

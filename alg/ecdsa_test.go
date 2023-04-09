@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
+	"hash"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,6 +82,20 @@ func TestECDSA(t *testing.T) {
 	t.Run("incorrect algorithm", func(t *testing.T) {
 		_, err := NewECDSA(RS384, ecdsa256PrivateKey, ecdsa256PublicKey)
 		assert.Error(t, err)
+	})
+	t.Run("error hash", func(t *testing.T) {
+		rs, err := NewECDSA(ES256, ecdsa256PrivateKey, ecdsa256PublicKey)
+		require.NoError(t, err)
+
+		rs.pool = NewHashPool(func() hash.Hash {
+			return &errorHash{}
+		})
+
+		_, err = rs.Verify([]byte("message"), []byte("signature"))
+		require.Error(t, err)
+
+		_, err = rs.Sign([]byte("message"))
+		require.Error(t, err)
 	})
 }
 

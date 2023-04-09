@@ -47,13 +47,20 @@ func testUnmarshalCorrupted(t *testing.T, j string) {
 	var a Audience
 	err := json.Unmarshal([]byte(j), &a)
 	assert.Error(t, err)
+
+	var aPtr *Audience
+	err = aPtr.UnmarshalJSON([]byte(j))
+	assert.Error(t, err)
 }
 
 func testUnmarshal(t *testing.T, j string, expected *Audience) {
 	var wrapper audienceWrapper
 	err := json.Unmarshal([]byte(fmt.Sprintf(`{"aud": %s}`, j)), &wrapper)
 	require.NoError(t, err)
+	assert.Equal(t, expected, wrapper.Audience)
 
+	err = wrapper.Audience.UnmarshalJSON([]byte(j))
+	require.NoError(t, err)
 	assert.Equal(t, expected, wrapper.Audience)
 }
 
