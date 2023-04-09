@@ -13,14 +13,19 @@ var (
 
 type Audience []string
 
-func (a Audience) MarshalJSON() ([]byte, error) {
-	switch len(a) {
+func (a *Audience) MarshalJSON() ([]byte, error) {
+	if a == nil {
+		return []byte("null"), nil
+	}
+
+	aValue := *a
+	switch len(aValue) {
 	case 0:
 		return []byte("null"), nil
 	case 1:
-		return []byte(fmt.Sprintf(`"%s"`, a[0])), nil
+		return []byte(fmt.Sprintf(`"%s"`, aValue[0])), nil
 	default:
-		return json.Marshal([]string(a))
+		return json.Marshal([]string(aValue))
 	}
 }
 

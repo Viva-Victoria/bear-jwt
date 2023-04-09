@@ -1,16 +1,61 @@
 package jwt
 
 import (
-	"encoding/json"
-
 	"github.com/Viva-Victoria/bear-jwt/alg"
+	"strings"
 )
 
-type Header struct {
+type Header interface {
+	GetAlgorithm() alg.Algorithm
+	SetAlgorithm(a alg.Algorithm)
+	GetType() Type
+	SetType(t Type)
+	GetContentType() string
+	GetKeyId() string
+}
+
+type BasicHeader struct {
 	Algorithm   alg.Algorithm `json:"alg"`
 	Type        Type          `json:"typ"`
 	ContentType string        `json:"cty,omitempty"`
 	KeyId       string        `json:"kid,omitempty"`
+}
+
+func NewBasicHeader(alg alg.Algorithm) *BasicHeader {
+	return &BasicHeader{
+		Algorithm: alg,
+		Type:      JsonWebTokenType,
+	}
+}
+
+func (h *BasicHeader) GetAlgorithm() alg.Algorithm {
+	return h.Algorithm
+}
+
+func (h *BasicHeader) SetAlgorithm(a alg.Algorithm) {
+	h.Algorithm = a
+}
+
+func (h *BasicHeader) GetType() Type {
+	return h.Type
+}
+
+func (h *BasicHeader) SetType(t Type) {
+	h.Type = t
+}
+
+func (h *BasicHeader) GetContentType() string {
+	return h.ContentType
+}
+
+func (h *BasicHeader) GetKeyId() string {
+	return h.KeyId
+}
+
+type Claims interface {
+	GetIssuedAt() *PosixTime
+	GetExpiresAt() *PosixTime
+	GetNotBefore() *PosixTime
 }
 
 type BasicClaims struct {
@@ -30,73 +75,24 @@ type BasicClaims struct {
 	Audience Audience `json:"aud,omitempty"`
 }
 
-type Claims struct {
-	raw []byte `json:"-"`
-	BasicClaims
+func (b BasicClaims) GetIssuedAt() *PosixTime {
+	return b.IssuedAt
 }
 
-func (c Claims) MarshalJSON() ([]byte, error) {
-	temp := make(map[string]interface{})
-	if len(c.raw) > 0 {
-		err := json.Unmarshal(c.raw, &temp)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if c.IssuedAt != nil {
-		temp["iat"] = c.IssuedAt
-	}
-	if c.ExpiresAt != nil {
-		temp["exp"] = c.ExpiresAt
-	}
-	if c.NotBefore != nil {
-		temp["nbf"] = c.NotBefore
-	}
-
-	if len(c.Id) > 0 {
-		temp["jti"] = c.Id
-	}
-	if len(c.Issuer) > 0 {
-		temp["iss"] = c.Issuer
-	}
-	if len(c.Subject) > 0 {
-		temp["sub"] = c.Subject
-	}
-	if len(c.Audience) > 0 {
-		temp["aud"] = c.Audience
-	}
-
-	return json.Marshal(temp)
+func (b BasicClaims) GetExpiresAt() *PosixTime {
+	return b.ExpiresAt
 }
 
-func (c *Claims) UnmarshalJSON(bytes []byte) error {
-	c.raw = bytes
-
-	temp := BasicClaims{}
-	err := json.Unmarshal(bytes, &temp)
-	if err != nil {
-		return err
-	}
-
-	c.BasicClaims = temp
-	return nil
+func (b BasicClaims) GetNotBefore() *PosixTime {
+	return b.NotBefore
 }
 
-func (c Claims) IsAudience(audience string) bool {
-	for _, aud := range c.Audience {
-		if isConstTimeEqualsString(aud, audience) {
+func (b BasicClaims) IsAudience(s string) bool {
+	for _, a := range b.Audience {
+		if strings.EqualFold(a, s) {
 			return true
 		}
 	}
 
 	return false
-}
-func (c Claims) Get(out interface{}) error {
-	return json.Unmarshal(c.raw, out)
-}
-
-func (c *Claims) Set(in interface{}) (err error) {
-	c.raw, err = json.Marshal(in)
-	return
 }

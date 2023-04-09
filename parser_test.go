@@ -61,8 +61,8 @@ func TestParser_Parse(t *testing.T) {
 	t.Run("normal unsigned", func(t *testing.T) {
 		token, err := Parse([]byte(`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ`))
 		require.NoError(t, err)
-		assert.Equal(t, JsonWebTokenType, token.Header.Type)
-		assert.Equal(t, alg.None, token.Header.Algorithm)
+		assert.Equal(t, JsonWebTokenType, token.GetHeader().GetType())
+		assert.Equal(t, alg.None, token.GetHeader().GetAlgorithm())
 
 		claims := nameClaims{}
 		require.NoError(t, token.Claims.Get(&claims))

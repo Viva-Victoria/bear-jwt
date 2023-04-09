@@ -18,7 +18,7 @@ func PosixNow() *PosixTime {
 	return NewPosixTime(time.Now())
 }
 
-func (p PosixTime) MarshalJSON() ([]byte, error) {
+func (p *PosixTime) MarshalJSON() ([]byte, error) {
 	if p.Time.IsZero() {
 		return []byte("null"), nil
 	}
