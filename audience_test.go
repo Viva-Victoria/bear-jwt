@@ -16,15 +16,22 @@ type audienceWrapper struct {
 func testMarshal(t *testing.T, expected string, actual *Audience) {
 	t.Helper()
 
-	raw, err := json.Marshal(audienceWrapper{actual})
+	raw, err := actual.MarshalJSON()
+	require.NoError(t, err)
+	assert.Equal(t, expected, string(raw))
+
+	raw, err = json.Marshal(audienceWrapper{actual})
 	require.NoError(t, err)
 	assert.Equal(t, fmt.Sprintf(`{"aud":%s}`, expected), string(raw))
 }
 
 func TestAudience_MarshalJSON(t *testing.T) {
 	t.Run("marshal empty", func(t *testing.T) {
-		testMarshal(t, `null`, nil)
-		testMarshal(t, `null`, &Audience{})
+		audience := &Audience{}
+		testMarshal(t, `null`, audience)
+
+		audience = nil
+		testMarshal(t, `null`, audience)
 	})
 	t.Run("marshal one item", func(t *testing.T) {
 		testMarshal(t, `"office"`, &Audience{"office"})

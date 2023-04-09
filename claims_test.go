@@ -1,9 +1,8 @@
 package jwt
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestClaims_IsAudience(t *testing.T) {

@@ -30,10 +30,11 @@ func (a *Audience) MarshalJSON() ([]byte, error) {
 }
 
 func (a *Audience) UnmarshalJSON(b []byte) error {
-	var value interface{}
+	var value any
 	if err := json.Unmarshal(b, &value); err != nil {
 		return err
 	}
+
 	if value == nil {
 		*a = make([]string, 0)
 		return nil
