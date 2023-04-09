@@ -21,7 +21,7 @@ func TestToken_Write(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("bad algorithm", func(t *testing.T) {
-		token := NewToken(NewBasicHeader(alg.HS256), BasicClaims{})
+		token := NewToken(NewBasicHeader("NE"), BasicClaims{})
 		_, err := token.WriteString()
 		require.Error(t, err)
 	})
@@ -59,8 +59,8 @@ func TestToken_Write(t *testing.T) {
 
 		text, err := token.WriteString()
 		require.NoError(t, err)
-		assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0."+
-			"0_qBmEQ8nUBQ0Ap_AWa4ZhDQ_2QAeGvkE98WCc3UzHs", strings.TrimSpace(text))
+		assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0."+
+			"iRteOM8kvvHu6ZP3CXRaIg5yHuS8HHQ7Tkq9xNGNcJE", strings.TrimSpace(text))
 	})
 
 	t.Run("valid no sign", func(t *testing.T) {
@@ -74,7 +74,7 @@ func TestToken_Write(t *testing.T) {
 
 		buffer, err := token.WriteString()
 		require.NoError(t, err)
-		assert.Equal(t, `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0`,
+		assert.Equal(t, `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE2NTUwMTAwMDAsImV4cCI6MTY1NzYwMjAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0`,
 			strings.TrimSpace(buffer))
 	})
 

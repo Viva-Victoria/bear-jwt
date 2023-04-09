@@ -2,11 +2,8 @@ package alg
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,21 +18,6 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 	genericPublicKey, _ := x509.ParsePKIXPublicKey(blockPublic.Bytes)
 
 	return privateKey, genericPublicKey.(*ecdsa.PublicKey)
-}
-
-func Test_generateECDSAKey(t *testing.T) {
-	t.Skip()
-	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
-		privateKey, _ := ecdsa.GenerateKey(curve, rand.Reader)
-
-		x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
-		pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
-
-		x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
-		pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
-
-		log.Printf("%d:\n%s\n%s\n", curve.Params().BitSize, string(pemEncoded), string(pemEncodedPub))
-	}
 }
 
 func testEcdsa(a Algorithm, private *ecdsa.PrivateKey, public *ecdsa.PublicKey) func(t *testing.T) {

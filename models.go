@@ -56,6 +56,11 @@ type Claims interface {
 	GetIssuedAt() *PosixTime
 	GetExpiresAt() *PosixTime
 	GetNotBefore() *PosixTime
+	GetId() string
+	GetIssuer() string
+	GetSubject() string
+	GetAudience() Audience
+	IsAudience(a string) bool
 }
 
 type BasicClaims struct {
@@ -73,6 +78,22 @@ type BasicClaims struct {
 	Subject string `json:"sub,omitempty"`
 	// Audience defines the recipients for which the token is intended, optional
 	Audience Audience `json:"aud,omitempty"`
+}
+
+func (b BasicClaims) GetId() string {
+	return b.Id
+}
+
+func (b BasicClaims) GetIssuer() string {
+	return b.Issuer
+}
+
+func (b BasicClaims) GetSubject() string {
+	return b.Subject
+}
+
+func (b BasicClaims) GetAudience() Audience {
+	return b.Audience
 }
 
 func (b BasicClaims) GetIssuedAt() *PosixTime {

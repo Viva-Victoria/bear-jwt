@@ -20,15 +20,21 @@ func Register(algorithm alg.Algorithm, verifier alg.Verifier, signer alg.Signer)
 	signers[algorithm] = signer
 }
 
+func ParseDefault(data []byte) (Token[*BasicHeader, BasicClaims], error) {
+	return Parse[*BasicHeader, BasicClaims](data)
+}
+
 // Parse returns Token parsed from byte array data or error if some troubles occurred
-func Parse(data []byte) (*Token, error) {
+func Parse[H Header, C Claims](data []byte) (Token[H, C], error) {
+	var token Token[H, C]
+
 	if len(data) == 0 {
-		return nil, ErrNoData
+		return token, ErrNoData
 	}
 
 	firstDot := bytes.Index(data, _dotBytes)
 	if firstDot == -1 {
-		return nil, ErrIncorrectFormat
+		return token, ErrIncorrectFormat
 	}
 
 	secondDot := bytes.Index(data[firstDot+1:], _dotBytes)
@@ -41,12 +47,12 @@ func Parse(data []byte) (*Token, error) {
 	payloadBytes := data[:secondDot]
 	headerBytes, err := fromBase64(payloadBytes[:firstDot])
 	if err != nil {
-		return nil, fmt.Errorf("bad header: %v", err)
+		return token, fmt.Errorf("bad header: %v", err)
 	}
 
 	claimsBytes, err := fromBase64(payloadBytes[firstDot+1:])
 	if err != nil {
-		return nil, fmt.Errorf("bad claims: %v", err)
+		return token, fmt.Errorf("bad claims: %v", err)
 	}
 
 	var signatureBytes []byte
@@ -54,37 +60,36 @@ func Parse(data []byte) (*Token, error) {
 		d := data[secondDot+1:]
 		signatureBytes, err = fromBase64(d)
 		if err != nil {
-			return nil, fmt.Errorf("bad signature: %v", err)
+			return token, fmt.Errorf("bad signature: %v", err)
 		}
 	}
 
-	header := NewBasicHeader(alg.None)
+	var header H
 	if err = json.Unmarshal(headerBytes, &header); err != nil {
-		return nil, err
+		return token, err
 	}
-	if header.Type != JsonWebTokenType {
-		return nil, fmt.Errorf("token type \"%s\" not supported", header.Type)
+	if typ := header.GetType(); typ != JsonWebTokenType {
+		return token, fmt.Errorf("token type \"%s\" not supported", typ)
 	}
 
-	verifier, ok := verifiers[header.Algorithm]
+	algorithm := header.GetAlgorithm()
+	verifier, ok := verifiers[algorithm]
 	if !ok {
-		return nil, fmt.Errorf("unknown algorithm \"%s\"", header.Algorithm)
+		return token, fmt.Errorf("unknown algorithm \"%s\"", algorithm)
 	}
 
 	ok, err = verifier.Verify(payloadBytes, signatureBytes)
 	if err != nil {
-		return nil, err
+		return token, err
 	}
 	if !ok {
-		return nil, ErrIncorrectSignature
+		return token, ErrIncorrectSignature
 	}
 
-	var claims BasicClaims
+	var claims C
 	if err = json.Unmarshal(claimsBytes, &claims); err != nil {
-		return nil, err
+		return token, err
 	}
 
-	token := NewToken(header, claims)
-	token.signature = signatureBytes
-	return token, nil
+	return NewToken(header, claims), nil
 }

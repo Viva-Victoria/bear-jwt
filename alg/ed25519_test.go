@@ -2,20 +2,11 @@ package alg
 
 import (
 	"crypto/ed25519"
-	"crypto/rand"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func Test_generateEd25519Key(t *testing.T) {
-	t.Skip()
-
-	public, private, _ := ed25519.GenerateKey(rand.Reader)
-	log.Println(toBase64(public), toBase64(private))
-}
 
 var (
 	ed25519PublicKey, _  = fromBase64("jJJCjYSnW2VCldC-kK3fywk3O34wKXjD989G3mQ8scU")

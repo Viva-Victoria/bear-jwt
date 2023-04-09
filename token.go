@@ -17,48 +17,27 @@ var (
 	}
 )
 
-type Token struct {
-	header Header
-	claims Claims
-
-	signature []byte
+type Token[H Header, C Claims] struct {
+	header H
+	claims C
 }
 
-func NewToken(header Header, claims BasicClaims) *Token {
-	return &Token{
+func NewToken[H Header, C Claims](header H, claims C) Token[H, C] {
+	return Token[H, C]{
 		header: header,
 		claims: claims,
 	}
 }
 
-func (t *Token) ReadHeader(h Header) error {
-	if err := json.Unmarshal(t.headerBytes, &h); err != nil {
-		return err
-	}
-	t.header = h
-
-	return nil
+func (t Token[H, C]) GetHeader() H {
+	return t.header
 }
 
-func (t *Token) ReadClaims(c Claims) error {
-	if err := json.Unmarshal(t.claimsBytes, &c); err != nil {
-		return err
-	}
-	t.claims = c
-
-	return nil
+func (t Token[H, C]) GetClaims() C {
+	return t.claims
 }
 
-func (t *Token) WriteString() (string, error) {
-	buf, err := t.write()
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-
-func (t *Token) Validate(moment time.Time) State {
+func (t Token[H, C]) Validate(moment time.Time) State {
 	if nbf := t.claims.GetNotBefore(); nbf != nil && nbf.After(moment) {
 		return StateInactive
 	}
@@ -71,37 +50,19 @@ func (t *Token) Validate(moment time.Time) State {
 	return StateValid
 }
 
-func (t *Token) ValidateNow() State {
+func (t Token[H, C]) ValidateNow() State {
 	return t.Validate(time.Now())
 }
 
-func (t *Token) GetHeader() Header {
-	return t.header
-}
-
-func (t *Token) GetClaims() Claims {
-	return t.claims
-}
-
-func (t *Token) write() (*bytes.Buffer, error) {
-	var (
-		headerBytes = t.headerBytes
-		claimsBytes = t.claimsBytes
-		err         error
-	)
-
-	if len(headerBytes) == 0 {
-		headerBytes, err = json.Marshal(t.header)
-		if err != nil {
-			return nil, err
-		}
+func (t Token[H, C]) WriteString() (string, error) {
+	headerBytes, err := json.Marshal(t.header)
+	if err != nil {
+		return "", err
 	}
 
-	if len(claimsBytes) == 0 {
-		claimsBytes, err = json.Marshal(t.claims)
-		if err != nil {
-			return nil, err
-		}
+	claimsBytes, err := json.Marshal(t.claims)
+	if err != nil {
+		return "", err
 	}
 
 	headerText := toBase64(headerBytes)
@@ -110,7 +71,7 @@ func (t *Token) write() (*bytes.Buffer, error) {
 	algorithm := t.header.GetAlgorithm()
 	signer, ok := signers[algorithm]
 	if !ok {
-		return nil, fmt.Errorf("unknown algorithm \"%s\"", algorithm)
+		return "", fmt.Errorf("unknown algorithm \"%s\"", algorithm)
 	}
 
 	result := _buffersPool.Get().(*bytes.Buffer)
@@ -126,12 +87,12 @@ func (t *Token) write() (*bytes.Buffer, error) {
 
 	signature, err := signer.Sign(result.Bytes())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if len(signature) > 0 {
 		result.Write(_dotBytes)
 		result.WriteString(toBase64(signature))
 	}
 
-	return result, nil
+	return result.String(), nil
 }
