@@ -74,7 +74,7 @@ func (t Token[H, C]) WriteString() (string, error) {
 		return "", fmt.Errorf("unknown algorithm \"%s\"", algorithm)
 	}
 
-	result := _buffersPool.Get().(*bytes.Buffer)
+	result, _ := _buffersPool.Get().(*bytes.Buffer)
 	defer func() {
 		result.Reset()
 		_buffersPool.Put(result)

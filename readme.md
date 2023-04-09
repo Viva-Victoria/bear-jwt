@@ -1,5 +1,5 @@
 # BEAR JWT 
-[![Build Status](https://app.travis-ci.com/Viva-Victoria/bear-jwt.svg?branch=master)](https://app.travis-ci.com/Viva-Victoria/bear-jwt) [![codecov](https://codecov.io/gh/Viva-Victoria/bear-jwt/branch/master/graph/badge.svg?token=IelspWAvBc)](https://codecov.io/gh/Viva-Victoria/bear-jwt)
+[![Go](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/main.yaml/badge.svg?branch=master&event=push)](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/main.yaml)
 ### bear-jwt is a part of big web api framework BEAR
 Simple tool for parsing and creating json web tokens. 
 
@@ -35,17 +35,21 @@ func init() {
 }
 
 func newToken(userId string) (string, error) {
-    token := jwt.NewToken(alg.HS256)
-    token.Claims.Id = uuid.NewString()
-    token.Claims.IssuedAt: jwt.PosixNow()
-	
+    token := jwt.NewToken[*jwt.BasicHeader, BasicClaims](
+		jwt.NewBasicHeader(alg.HS256), 
+		jwt.BasicClaims{
+		    Id: uuid.NewString(),
+		    IssuedAt: jwt.PosixNow(),
+        },
+    )
+    
     return token.WriteString()
 }
 ```
 You can add key info to Header (RFC 7517):
 ```golang
 token := jwt.NewToken(alg.HS256)
-token.Header.KeyId = 1
+token.GetHeader().SetKeyId(1)
 ```
 
 Parsing token:
@@ -54,7 +58,7 @@ func parseUserId(httpHeader string) (string, error) {
     hs256 := alg.NewSha256("server-secret")
     Register(HS256, hs256, hs256)
     
-    token, err := Parse(strings.Replace(httpHeader, "Bearer ", ""))
+    token, err := Parse[*jwt.BasicHeader, myClaims](strings.Replace(httpHeader, "Bearer ", ""))
     if err != nil {
         return "", err
     }
@@ -65,12 +69,7 @@ func parseUserId(httpHeader string) (string, error) {
         return "", fmt.Errorf("bad token: %d", state)
     }
 	
-    var info myClaims
-    if err = token.Claims.Get(&info); err != nil {
-        return "", err
-    }
-	
-    return info.UserId, nil
+    return token.GetClaims().UserId, nil
 }
 ```
 

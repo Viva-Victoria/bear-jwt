@@ -106,11 +106,13 @@ func TestParser_Parse(t *testing.T) {
 		_, err = ParseDefault([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`))
 		require.EqualError(t, ErrIncorrectFormat, err.Error())
 
-		_, err = ParseDefault([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0." +
+		_, err = ParseDefault([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9." +
+			"eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0." +
 			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
 		require.Error(t, err)
 
-		_, err = ParseDefault([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsMSJpYXQiOjE2NTUwMTAwMDAsImp0aSI6IjAyMmFlZTg4LTQzMDUtNDk3Yi04MzA1LTQwNGMwYzZiYWM1NyJ9." +
+		_, err = ParseDefault([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9." +
+			"eyJleHAiOjE2NTc2MDIwMDAsMSJpYXQiOjE2NTUwMTAwMDAsImp0aSI6IjAyMmFlZTg4LTQzMDUtNDk3Yi04MzA1LTQwNGMwYzZiYWM1NyJ9." +
 			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
 		require.Error(t, err)
 	})

@@ -11,11 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type testClaims struct {
-	Name    string `json:"name,omitempty"`
-	Surname string `json:"surname,omitempty"`
-}
-
 func TestToken_Write(t *testing.T) {
 	hs256, err := alg.NewHmacSha(alg.HS256, "secret")
 	require.NoError(t, err)

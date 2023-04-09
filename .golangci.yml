@@ -22,10 +22,7 @@ linters:
     - govet
     - prealloc
     # code style + cleanup
-    - deadcode
     - revive
-    - varcheck
-    - structcheck
     - dupl
     - ineffassign
     - unconvert

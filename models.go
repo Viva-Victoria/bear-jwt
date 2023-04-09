@@ -1,8 +1,9 @@
 package jwt
 
 import (
-	"github.com/Viva-Victoria/bear-jwt/alg"
 	"strings"
+
+	"github.com/Viva-Victoria/bear-jwt/alg"
 )
 
 type Header interface {
@@ -50,6 +51,10 @@ func (h *BasicHeader) GetContentType() string {
 
 func (h *BasicHeader) GetKeyId() string {
 	return h.KeyId
+}
+
+func (h *BasicHeader) SetKeyId(id string) {
+	h.KeyId = id
 }
 
 type Claims interface {
