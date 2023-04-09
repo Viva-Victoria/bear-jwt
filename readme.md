@@ -1,5 +1,7 @@
 # BEAR JWT 
-[![Go](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/main.yaml/badge.svg?branch=master&event=push)](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/main.yaml)
+[![Go](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/go.yaml/badge.svg)](https://github.com/Viva-Victoria/bear-jwt/actions/workflows/go.yaml)
+[![codecov](https://codecov.io/gh/Viva-Victoria/bear-jwt/branch/master/graph/badge.svg?token=IelspWAvBc)](https://codecov.io/gh/Viva-Victoria/bear-jwt)
+
 ### bear-jwt is a part of big web api framework BEAR
 Simple tool for parsing and creating json web tokens. 
 
