@@ -1,7 +1,9 @@
 package alg
 
 import (
+	"crypto"
 	"crypto/rsa"
+	"hash"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,5 +60,33 @@ func TestRsaSsaPss(t *testing.T) {
 		ok, err := secondary.Verify(payload, signature)
 		require.NoError(t, err)
 		assert.False(t, ok)
+	})
+	t.Run("error hash", func(t *testing.T) {
+		t.Run("bad hash", func(t *testing.T) {
+			rs, err := NewRsaSsaPss(PS256, rsa256PrivateKey, rsa256PublicKey)
+			require.NoError(t, err)
+
+			rs.hash = crypto.SHA384
+			rs.pool = NewHashPool(crypto.SHA384.New)
+
+			_, err = rs.Sign([]byte("message"))
+			require.Error(t, err)
+		})
+
+		t.Run("error hash", func(t *testing.T) {
+			rs, err := NewRsaSsaPss(PS256, rsa256PrivateKey, rsa256PublicKey)
+			require.NoError(t, err)
+
+			rs.hash = crypto.SHA256
+			rs.pool = NewHashPool(func() hash.Hash {
+				return &errorHash{}
+			})
+
+			_, err = rs.Verify([]byte("message"), []byte("signature"))
+			require.Error(t, err)
+
+			_, err = rs.Sign([]byte("message"))
+			require.Error(t, err)
+		})
 	})
 }

@@ -10,27 +10,34 @@ import (
 )
 
 type audienceWrapper struct {
-	Audience Audience `json:"aud"`
+	Audience *Audience `json:"aud"`
 }
 
-func testMarshal(t *testing.T, expected string, actual Audience) {
+func testMarshal(t *testing.T, expected string, actual *Audience) {
 	t.Helper()
 
-	raw, err := json.Marshal(audienceWrapper{actual})
+	raw, err := actual.MarshalJSON()
+	require.NoError(t, err)
+	assert.Equal(t, expected, string(raw))
+
+	raw, err = json.Marshal(audienceWrapper{actual})
 	require.NoError(t, err)
 	assert.Equal(t, fmt.Sprintf(`{"aud":%s}`, expected), string(raw))
 }
 
 func TestAudience_MarshalJSON(t *testing.T) {
 	t.Run("marshal empty", func(t *testing.T) {
-		testMarshal(t, `null`, nil)
-		testMarshal(t, `null`, Audience{})
+		audience := &Audience{}
+		testMarshal(t, `null`, audience)
+
+		audience = nil
+		testMarshal(t, `null`, audience)
 	})
 	t.Run("marshal one item", func(t *testing.T) {
-		testMarshal(t, `"office"`, Audience{"office"})
+		testMarshal(t, `"office"`, &Audience{"office"})
 	})
 	t.Run("marshal two items", func(t *testing.T) {
-		testMarshal(t, `["api","office"]`, Audience{"api", "office"})
+		testMarshal(t, `["api","office"]`, &Audience{"api", "office"})
 	})
 }
 
@@ -40,13 +47,20 @@ func testUnmarshalCorrupted(t *testing.T, j string) {
 	var a Audience
 	err := json.Unmarshal([]byte(j), &a)
 	assert.Error(t, err)
+
+	var aPtr *Audience
+	err = aPtr.UnmarshalJSON([]byte(j))
+	assert.Error(t, err)
 }
 
-func testUnmarshal(t *testing.T, j string, expected Audience) {
+func testUnmarshal(t *testing.T, j string, expected *Audience) {
 	var wrapper audienceWrapper
 	err := json.Unmarshal([]byte(fmt.Sprintf(`{"aud": %s}`, j)), &wrapper)
 	require.NoError(t, err)
+	assert.Equal(t, expected, wrapper.Audience)
 
+	err = wrapper.Audience.UnmarshalJSON([]byte(j))
+	require.NoError(t, err)
 	assert.Equal(t, expected, wrapper.Audience)
 }
 
@@ -59,15 +73,15 @@ func TestAudience_UnmarshalJSON(t *testing.T) {
 		testUnmarshalCorrupted(t, "{}")
 	})
 	t.Run("unmarshal one string", func(t *testing.T) {
-		testUnmarshal(t, `"office"`, Audience{"office"})
+		testUnmarshal(t, `"office"`, &Audience{"office"})
 	})
 	t.Run("unmarshal one array", func(t *testing.T) {
-		testUnmarshal(t, `["office"]`, Audience{"office"})
+		testUnmarshal(t, `["office"]`, &Audience{"office"})
 	})
 	t.Run("unmarshal array", func(t *testing.T) {
-		testUnmarshal(t, `["api", "office"]`, Audience{"api", "office"})
+		testUnmarshal(t, `["api", "office"]`, &Audience{"api", "office"})
 	})
 	t.Run("unmarshal null", func(t *testing.T) {
-		testUnmarshal(t, `null`, Audience{})
+		testUnmarshal(t, `null`, nil)
 	})
 }

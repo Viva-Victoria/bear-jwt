@@ -12,6 +12,7 @@ import (
 
 type nameClaims struct {
 	Name string `json:"name"`
+	BasicClaims
 }
 
 type errorVerifier struct {
@@ -33,40 +34,38 @@ func TestParser_Parse(t *testing.T) {
 	Register(alg.None, alg.NoneAlgorithm{}, alg.NoneAlgorithm{})
 
 	t.Run("bad header", func(t *testing.T) {
-		_, err := Parse([]byte(`no-base64.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err := ParseDefault(`no-base64.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		assert.Error(t, err)
 
-		_, err = Parse([]byte(`ewogICJhbGciOiAiSFMyNTYiLAogICJ0eXAiOiAiSldUIjEKfQ.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err = ParseDefault(`ewogICJhbGciOiAiSFMyNTYiLAogICJ0eXAiOiAiSldUIjEKfQ.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		assert.Error(t, err)
 	})
 
 	t.Run("bad claims", func(t *testing.T) {
-		_, err := Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.no-base64.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err := ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.no-base64.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		require.Error(t, err)
 
-		_, err = Parse([]byte(`ewogICJhbGciOiAiSFMyNTYiLAogICJ0eXAiOiAiSldUIjEKfQ.eyJuYW1lIjoiSm9obiBXYWxrZXIifTE.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err = ParseDefault(`ewogICJhbGciOiAiSFMyNTYiLAogICJ0eXAiOiAiSldUIjEKfQ.eyJuYW1lIjoiSm9obiBXYWxrZXIifTE.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		assert.Error(t, err)
 	})
 
 	t.Run("bad signature", func(t *testing.T) {
-		_, err := Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.no-base64`))
+		_, err := ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.no-base64`)
 		require.Error(t, err)
 	})
 
 	t.Run("bad unsigned", func(t *testing.T) {
-		_, err := Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err := ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		require.Error(t, err)
 	})
 
 	t.Run("normal unsigned", func(t *testing.T) {
-		token, err := Parse([]byte(`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ`))
+		token, err := Parse[*BasicHeader, nameClaims](`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ`)
 		require.NoError(t, err)
-		assert.Equal(t, JsonWebTokenType, token.Header.Type)
-		assert.Equal(t, alg.None, token.Header.Algorithm)
+		assert.Equal(t, JsonWebTokenType, token.GetHeader().GetType())
+		assert.Equal(t, alg.None, token.GetHeader().GetAlgorithm())
 
-		claims := nameClaims{}
-		require.NoError(t, token.Claims.Get(&claims))
-		assert.Equal(t, "John Walker", claims.Name)
+		assert.Equal(t, "John Walker", token.GetClaims().Name)
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
@@ -74,7 +73,7 @@ func TestParser_Parse(t *testing.T) {
 		require.NoError(t, err)
 		Register(alg.HS256, hs256, hs256)
 
-		_, err = Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err = ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		require.Error(t, err)
 	})
 
@@ -82,7 +81,7 @@ func TestParser_Parse(t *testing.T) {
 		errVerifier := &errorVerifier{}
 		Register(alg.HS256, errVerifier, errVerifier)
 
-		_, err := Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		_, err := ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		require.Error(t, err)
 	})
 
@@ -92,29 +91,29 @@ func TestParser_Parse(t *testing.T) {
 
 		Register(alg.HS256, hs256, hs256)
 
-		token, err := Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`))
+		token, err := Parse[*BasicHeader, nameClaims](`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBXYWxrZXIifQ.7UmH--UfHa2MPdiP9tX--FK_1tgojlAZSu2R7RyeEaY`)
 		require.NoError(t, err)
-		assert.Equal(t, JsonWebTokenType, token.Header.Type)
-		assert.Equal(t, alg.HS256, token.Header.Algorithm)
+		assert.Equal(t, JsonWebTokenType, token.GetHeader().Type)
+		assert.Equal(t, alg.HS256, token.GetHeader().Algorithm)
 
-		claims := nameClaims{}
-		require.NoError(t, token.Claims.Get(&claims))
-		assert.Equal(t, "John Walker", claims.Name)
+		assert.Equal(t, "John Walker", token.GetClaims().Name)
 	})
 
 	t.Run("bad data", func(t *testing.T) {
-		_, err := Parse(nil)
+		_, err := ParseDefault("")
 		require.EqualError(t, ErrNoData, err.Error())
 
-		_, err = Parse([]byte(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`))
+		_, err = ParseDefault(`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`)
 		require.EqualError(t, ErrIncorrectFormat, err.Error())
 
-		_, err = Parse([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0." +
-			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
+		_, err = ParseDefault("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9." +
+			"eyJleHAiOjE2NTc2MDIwMDAsImlhdCI6MTY1NTAxMDAwMCwianRpIjoiMDIyYWVlODgtNDMwNS00OTdiLTgzMDUtNDA0YzBjNmJhYzU3In0." +
+			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U")
 		require.Error(t, err)
 
-		_, err = Parse([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9.eyJleHAiOjE2NTc2MDIwMDAsMSJpYXQiOjE2NTUwMTAwMDAsImp0aSI6IjAyMmFlZTg4LTQzMDUtNDk3Yi04MzA1LTQwNGMwYzZiYWM1NyJ9." +
-			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U"))
+		_, err = ParseDefault("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXQSJ9." +
+			"eyJleHAiOjE2NTc2MDIwMDAsMSJpYXQiOjE2NTUwMTAwMDAsImp0aSI6IjAyMmFlZTg4LTQzMDUtNDk3Yi04MzA1LTQwNGMwYzZiYWM1NyJ9." +
+			"ob-oT_SxYuync2i501PkErDHDyB3JmhI1lDd-IuLc3U")
 		require.Error(t, err)
 	})
 }

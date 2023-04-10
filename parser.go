@@ -20,18 +20,23 @@ func Register(algorithm alg.Algorithm, verifier alg.Verifier, signer alg.Signer)
 	signers[algorithm] = signer
 }
 
-// Parse returns Token parsed from byte array data or error if some troubles occurred
-func Parse(data []byte) (Token, error) {
+func ParseDefault(data string) (*Token[*BasicHeader, BasicClaims], error) {
+	return Parse[*BasicHeader, BasicClaims](data)
+}
+
+// Parse returns Token parsed from string or error if some troubles occurred
+func Parse[H Header, C Claims](text string) (*Token[H, C], error) {
+	data := []byte(text)
 	if len(data) == 0 {
-		return Token{}, ErrNoData
+		return nil, ErrNoData
 	}
 
-	firstDot := bytes.Index(data, dotBytes)
+	firstDot := bytes.Index(data, _dotBytes)
 	if firstDot == -1 {
-		return Token{}, ErrIncorrectFormat
+		return nil, ErrIncorrectFormat
 	}
 
-	secondDot := bytes.Index(data[firstDot+1:], dotBytes)
+	secondDot := bytes.Index(data[firstDot+1:], _dotBytes)
 	if secondDot == -1 {
 		secondDot = len(data)
 	} else {
@@ -41,12 +46,12 @@ func Parse(data []byte) (Token, error) {
 	payloadBytes := data[:secondDot]
 	headerBytes, err := fromBase64(payloadBytes[:firstDot])
 	if err != nil {
-		return Token{}, fmt.Errorf("bad header: %v", err)
+		return nil, fmt.Errorf("bad header: %v", err)
 	}
 
 	claimsBytes, err := fromBase64(payloadBytes[firstDot+1:])
 	if err != nil {
-		return Token{}, fmt.Errorf("bad claims: %v", err)
+		return nil, fmt.Errorf("bad claims: %v", err)
 	}
 
 	var signatureBytes []byte
@@ -54,39 +59,36 @@ func Parse(data []byte) (Token, error) {
 		d := data[secondDot+1:]
 		signatureBytes, err = fromBase64(d)
 		if err != nil {
-			return Token{}, fmt.Errorf("bad signature: %v", err)
+			return nil, fmt.Errorf("bad signature: %v", err)
 		}
 	}
 
-	header := Header{}
+	var header H
 	if err = json.Unmarshal(headerBytes, &header); err != nil {
-		return Token{}, err
+		return nil, err
 	}
-	if header.Type != JsonWebTokenType {
-		return Token{}, fmt.Errorf("token type \"%s\" not supported", header.Type)
+	if typ := header.GetType(); typ != JsonWebTokenType {
+		return nil, fmt.Errorf("token type \"%s\" not supported", typ)
 	}
 
-	verifier, ok := verifiers[header.Algorithm]
+	algorithm := header.GetAlgorithm()
+	verifier, ok := verifiers[algorithm]
 	if !ok {
-		return Token{}, fmt.Errorf("unknown algorithm \"%s\"", header.Algorithm)
+		return nil, fmt.Errorf("unknown algorithm \"%s\"", algorithm)
 	}
 
 	ok, err = verifier.Verify(payloadBytes, signatureBytes)
 	if err != nil {
-		return Token{}, err
+		return nil, err
 	}
 	if !ok {
-		return Token{}, ErrIncorrectSignature
+		return nil, ErrIncorrectSignature
 	}
 
-	claims := Claims{}
+	var claims C
 	if err = json.Unmarshal(claimsBytes, &claims); err != nil {
-		return Token{}, err
+		return nil, err
 	}
 
-	return Token{
-		Header:    header,
-		Claims:    claims,
-		signature: signatureBytes,
-	}, nil
+	return NewToken(header, claims), nil
 }

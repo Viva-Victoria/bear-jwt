@@ -105,6 +105,11 @@ func TestRsaSsaPkcs(t *testing.T) {
 		rs, err := NewRsaSsaPkcs1(RS256, rsa256PrivateKey, rsa256PublicKey)
 		require.NoError(t, err)
 
+		rs.hash = crypto.SHA384
+		_, err = rs.Sign([]byte("message"))
+		require.Error(t, err)
+
+		rs.hash = crypto.SHA256
 		rs.pool = NewHashPool(func() hash.Hash {
 			return &errorHash{}
 		})

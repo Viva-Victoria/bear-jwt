@@ -4,88 +4,103 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
-
-	"github.com/Viva-Victoria/bear-jwt/alg"
 )
 
 var (
-	dotBytes = []byte(".")
-)
-
-type Token struct {
-	Header    Header
-	Claims    Claims
-	signature []byte
-}
-
-func NewToken(a alg.Algorithm) Token {
-	return Token{
-		Header: Header{
-			Algorithm: a,
-			Type:      JsonWebTokenType,
+	_dotBytes    = []byte(".")
+	_buffersPool = sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 4096))
 		},
 	}
+)
+
+type Token[H Header, C Claims] struct {
+	header H
+	claims C
 }
 
-func (t Token) Write() (*bytes.Buffer, error) {
-	headerJson, err := json.Marshal(t.Header)
-	if err != nil {
-		return nil, err
+func NewToken[H Header, C Claims](header H, claims C) *Token[H, C] {
+	return &Token[H, C]{
+		header: header,
+		claims: claims,
 	}
-	headerText := toBase64(headerJson)
-
-	claimsJson, err := json.Marshal(t.Claims)
-	if err != nil {
-		return nil, err
-	}
-	claimsText := toBase64(claimsJson)
-
-	signer, ok := signers[t.Header.Algorithm]
-	if !ok {
-		return nil, fmt.Errorf("unknown algorithm \"%s\"", t.Header.Algorithm)
-	}
-
-	result := new(bytes.Buffer)
-	result.Grow(len(headerText) + len(claimsText) + signer.Size() + len(dotBytes)*2)
-	result.WriteString(headerText)
-	result.Write(dotBytes)
-	result.WriteString(claimsText)
-
-	signature, err := signer.Sign(result.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	if len(signature) > 0 {
-		result.Write(dotBytes)
-		result.WriteString(toBase64(signature))
-	}
-
-	return result, nil
 }
 
-func (t Token) WriteString() (string, error) {
-	buf, err := t.Write()
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
+func (t *Token[H, C]) GetHeader() H {
+	return t.header
 }
 
-func (t Token) Validate(moment time.Time) State {
-	if nbf := t.Claims.NotBefore; nbf != nil && nbf.After(moment) {
+func (t *Token[H, C]) SetHeader(h H) {
+	t.header = h
+}
+
+func (t *Token[H, C]) GetClaims() C {
+	return t.claims
+}
+
+func (t *Token[H, C]) SetClaims(c C) {
+	t.claims = c
+}
+
+func (t *Token[H, C]) Validate(moment time.Time) State {
+	if nbf := t.claims.GetNotBefore(); nbf != nil && nbf.After(moment) {
 		return StateInactive
 	}
-	if exp := t.Claims.ExpiresAt; exp != nil && exp.Before(moment) {
+	if exp := t.claims.GetExpiresAt(); exp != nil && exp.Before(moment) {
 		return StateExpired
 	}
-	if iat := t.Claims.IssuedAt; iat != nil && iat.After(moment) {
+	if iat := t.claims.GetIssuedAt(); iat != nil && iat.After(moment) {
 		return StateNotIssued
 	}
 	return StateValid
 }
 
-func (t Token) ValidateNow() State {
+func (t *Token[H, C]) ValidateNow() State {
 	return t.Validate(time.Now())
+}
+
+func (t *Token[H, C]) WriteString() (string, error) {
+	headerBytes, err := json.Marshal(t.header)
+	if err != nil {
+		return "", err
+	}
+
+	claimsBytes, err := json.Marshal(t.claims)
+	if err != nil {
+		return "", err
+	}
+
+	headerText := toBase64(headerBytes)
+	claimsText := toBase64(claimsBytes)
+
+	algorithm := t.header.GetAlgorithm()
+	signer, ok := signers[algorithm]
+	if !ok {
+		return "", fmt.Errorf("unknown algorithm \"%s\"", algorithm)
+	}
+
+	result, _ := _buffersPool.Get().(*bytes.Buffer)
+	defer func() {
+		result.Reset()
+		_buffersPool.Put(result)
+	}()
+
+	result.Grow(len(headerText) + len(claimsText) + signer.Size() + len(_dotBytes)*2)
+	result.WriteString(headerText)
+	result.Write(_dotBytes)
+	result.WriteString(claimsText)
+
+	signature, err := signer.Sign(result.Bytes())
+	if err != nil {
+		return "", err
+	}
+	if len(signature) > 0 {
+		result.Write(_dotBytes)
+		result.WriteString(toBase64(signature))
+	}
+
+	return result.String(), nil
 }

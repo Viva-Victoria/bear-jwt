@@ -2,11 +2,9 @@ package alg
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"log"
+	"hash"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,21 +19,6 @@ func decodeEcdsa(private string, public string) (*ecdsa.PrivateKey, *ecdsa.Publi
 	genericPublicKey, _ := x509.ParsePKIXPublicKey(blockPublic.Bytes)
 
 	return privateKey, genericPublicKey.(*ecdsa.PublicKey)
-}
-
-func Test_generateECDSAKey(t *testing.T) {
-	t.Skip()
-	for _, curve := range []elliptic.Curve{elliptic.P256(), elliptic.P384(), elliptic.P521()} {
-		privateKey, _ := ecdsa.GenerateKey(curve, rand.Reader)
-
-		x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
-		pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
-
-		x509EncodedPub, _ := x509.MarshalPKIXPublicKey(privateKey.Public())
-		pemEncodedPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: x509EncodedPub})
-
-		log.Printf("%d:\n%s\n%s\n", curve.Params().BitSize, string(pemEncoded), string(pemEncodedPub))
-	}
 }
 
 func testEcdsa(a Algorithm, private *ecdsa.PrivateKey, public *ecdsa.PublicKey) func(t *testing.T) {
@@ -99,6 +82,20 @@ func TestECDSA(t *testing.T) {
 	t.Run("incorrect algorithm", func(t *testing.T) {
 		_, err := NewECDSA(RS384, ecdsa256PrivateKey, ecdsa256PublicKey)
 		assert.Error(t, err)
+	})
+	t.Run("error hash", func(t *testing.T) {
+		rs, err := NewECDSA(ES256, ecdsa256PrivateKey, ecdsa256PublicKey)
+		require.NoError(t, err)
+
+		rs.pool = NewHashPool(func() hash.Hash {
+			return &errorHash{}
+		})
+
+		_, err = rs.Verify([]byte("message"), []byte("signature"))
+		require.Error(t, err)
+
+		_, err = rs.Sign([]byte("message"))
+		require.Error(t, err)
 	})
 }
 
