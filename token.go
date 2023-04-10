@@ -22,22 +22,30 @@ type Token[H Header, C Claims] struct {
 	claims C
 }
 
-func NewToken[H Header, C Claims](header H, claims C) Token[H, C] {
-	return Token[H, C]{
+func NewToken[H Header, C Claims](header H, claims C) *Token[H, C] {
+	return &Token[H, C]{
 		header: header,
 		claims: claims,
 	}
 }
 
-func (t Token[H, C]) GetHeader() H {
+func (t *Token[H, C]) GetHeader() H {
 	return t.header
 }
 
-func (t Token[H, C]) GetClaims() C {
+func (t *Token[H, C]) SetHeader(h H) {
+	t.header = h
+}
+
+func (t *Token[H, C]) GetClaims() C {
 	return t.claims
 }
 
-func (t Token[H, C]) Validate(moment time.Time) State {
+func (t *Token[H, C]) SetClaims(c C) {
+	t.claims = c
+}
+
+func (t *Token[H, C]) Validate(moment time.Time) State {
 	if nbf := t.claims.GetNotBefore(); nbf != nil && nbf.After(moment) {
 		return StateInactive
 	}
@@ -50,11 +58,11 @@ func (t Token[H, C]) Validate(moment time.Time) State {
 	return StateValid
 }
 
-func (t Token[H, C]) ValidateNow() State {
+func (t *Token[H, C]) ValidateNow() State {
 	return t.Validate(time.Now())
 }
 
-func (t Token[H, C]) WriteString() (string, error) {
+func (t *Token[H, C]) WriteString() (string, error) {
 	headerBytes, err := json.Marshal(t.header)
 	if err != nil {
 		return "", err
