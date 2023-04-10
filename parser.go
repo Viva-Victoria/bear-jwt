@@ -20,13 +20,16 @@ func Register(algorithm alg.Algorithm, verifier alg.Verifier, signer alg.Signer)
 	signers[algorithm] = signer
 }
 
-func ParseDefault(data []byte) (Token[*BasicHeader, BasicClaims], error) {
+func ParseDefault(data string) (Token[*BasicHeader, BasicClaims], error) {
 	return Parse[*BasicHeader, BasicClaims](data)
 }
 
-// Parse returns Token parsed from byte array data or error if some troubles occurred
-func Parse[H Header, C Claims](data []byte) (Token[H, C], error) {
-	var token Token[H, C]
+// Parse returns Token parsed from string or error if some troubles occurred
+func Parse[H Header, C Claims](text string) (Token[H, C], error) {
+	var (
+		token Token[H, C]
+		data  = []byte(text)
+	)
 
 	if len(data) == 0 {
 		return token, ErrNoData
